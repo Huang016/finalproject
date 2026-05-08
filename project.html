@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>台灣河川污染監測平台 | Taiwan River Monitor</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --deep-blue: #002244;
+            --coral-orange: #FF7F50;
+            --light-bg: #F0FFFF;
+            --white: #ffffff;
+            --danger-red: #ff4d4d;
+            --warning-yellow: #ffcc00;
+            --safe-green: #33cc33;
+        }
+        body, html {
+            margin: 0; padding: 0;
+            font-family: "微軟正黑體", sans-serif;
+            background-color: var(--light-bg);
+            color: #181717; scroll-behavior: smooth;
+            overflow-x: hidden; /* 🔥 徹底防止整個網頁出現左右捲軸 */
+        }
+        nav { 
+            background-color: var(--deep-blue); padding: 15px 30px; position: fixed; 
+            width: 100%; top: 0; z-index: 2000; display: flex; justify-content: space-between; 
+            align-items: center; box-sizing: border-box; 
+        }
+        nav .logo { color: var(--white); font-size: 20px; font-weight: bold; }
+        nav a { color: var(--white); text-decoration: none; margin: 0 15px; font-weight: bold; transition: color 0.3s; }
+        nav a:hover { color: var(--coral-orange); }
+        .hero {
+            background-image: linear-gradient(rgba(0, 34, 68, 0.7), rgba(0, 34, 68, 0.7)), 
+            url('https://images.unsplash.com/photo-1611273426858-450d8e3c9fce?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
+            height: 100vh; background-attachment: fixed; background-position: center; background-size: cover;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; 
+            color: var(--white); text-align: center;
+        }
+        .hero h1 { font-size: 3.5rem; margin-bottom: 10px; }
+        .hero p { font-size: 1.5rem; margin-bottom: 30px; }
+        .cta-btn { 
+            background-color: var(--coral-orange); color: var(--white); padding: 15px 30px; 
+            text-decoration: none; border-radius: 5px; font-weight: bold; transition: 0.3s; border:none; cursor:pointer;
+        }
+        .cta-btn:hover { background-color: #ff6329; transform: scale(1.05); }
+        section { padding: 80px 5%; text-align: center; }
+        section h2 { color: var(--deep-blue); font-size: 2.5rem; margin-bottom: 20px; }
+        
+        /* 地圖區塊 */
+        .map-wrapper {
+            position: relative; width: 95%; max-width: 1200px; height: 600px; 
+            margin: 0 auto; border-radius: 20px; overflow: hidden; border: 5px solid var(--deep-blue);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+        #map { width: 100%; height: 100%; background: #001122; }
+        .dashboard {
+            position: absolute; top: 20px; left: 20px; z-index: 1000;
+            background: rgba(0, 34, 68, 0.85); color: white; padding: 20px;
+            border-radius: 15px; backdrop-filter: blur(10px); width: 240px; text-align: left;
+            border: 1px solid rgba(255,255,255,0.2); pointer-events: none;
+        }
+        .legend-item { display: flex; align-items: center; margin-bottom: 12px; font-size: 0.9rem; }
+        .dot { width: 12px; height: 12px; border-radius: 50%; margin-right: 10px; }
+        
+        /* 報表區塊 */
+        .report-panel { text-align: left; background: #fff; border-radius: 18px; padding: 20px; box-shadow: 0 16px 40px rgba(0,0,0,0.15); margin: 40px auto; max-width: 1200px; overflow-x: auto; /* 🔥 防止表格太寬撐破網頁 */ }
+        .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: #f0f4f8; padding: 15px; border-radius: 10px; flex-wrap: wrap; gap: 10px;}
+        .filter-group input, .filter-group select { padding: 8px; border: 1px solid #ccc; border-radius: 5px; outline: none; margin-right: 10px; }
+        .export-btn { background-color: #28a745; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .export-btn:hover { background-color: #218838; }
+        
+        /* 表格設定 */
+        .report-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .report-table th, .report-table td { padding: 12px 10px; border-bottom: 1px solid #e6eef7; font-size: 0.95rem; }
+        .report-table th { background: #f5faff; color: var(--deep-blue); text-align: left; }
+        .report-table tr:hover { background: #f3faff; }
+        .status-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; vertical-align: middle; }
+        .status-safe { background: var(--safe-green); }
+        .status-warning { background: var(--warning-yellow); }
+        .status-danger { background: var(--danger-red); }
+        .detail-btn { background: var(--deep-blue); color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; }
+        .detail-btn:hover { background: var(--coral-orange); }
+
+        /* Modal 彈出視窗 */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 3000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .modal-content { background: white; padding: 30px; border-radius: 15px; width: 90%; max-width: 600px; position: relative; }
+        .close-btn { position: absolute; top: 15px; right: 20px; font-size: 1.5rem; cursor: pointer; color: #666; }
+        
+        /* 民眾通報區塊 */
+        #report-form-section { background-color: #fff; }
+        .form-container { max-width: 600px; margin: 0 auto; background: var(--light-bg); padding: 30px; border-radius: 15px; text-align: left; box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-weight: bold; margin-bottom: 5px; color: var(--deep-blue); }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        
+        /* 地圖雷達特效 */
+        .radar-ping { border-radius: 50%; position: relative; }
+        .radar-ping::after { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 50%; animation: pulse 2s infinite ease-out; border: 2px solid inherit; }
+        @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(4); opacity: 0; } }
+        
+        /* --- 💎 精美的 Popup 氣泡樣式 (徹底消滅左右捲軸版) --- */
+        .custom-popup .leaflet-popup-content-wrapper { border-radius: 12px; }
+        .custom-popup .leaflet-popup-content { overflow-x: hidden !important; } /* 🔥 強制隱藏氣泡內的左右捲軸 */
+        
+        /* ✅ 寬度改為100%自適應，不再寫死，這樣就不會超出邊界了 */
+        .popup-container { font-family: "微軟正黑體", sans-serif; width: 100%; box-sizing: border-box; overflow-x: hidden; }
+        
+        .popup-title { font-size: 1.3rem; font-weight: bold; color: #333; margin-bottom: 5px; }
+        .popup-subtitle { font-size: 0.85rem; color: #666; margin-bottom: 12px; }
+        .popup-badge { display: block; width: 100%; padding: 6px 0; text-align: center; border-radius: 6px; font-weight: bold; margin-bottom: 10px; box-sizing: border-box; }
+        .popup-section { border-radius: 6px; padding: 10px; margin-bottom: 8px; }
+        
+        .popup-data-blue { background-color: #f3f0ff; border-left: 4px solid #5c85ff; }
+        .popup-data-red { background-color: #fff0f0; border-left: 4px solid #ff4d4d; }
+        .popup-section-title { font-weight: bold; margin-bottom: 10px; color: #333; display: flex; align-items: center; }
+        .popup-row { margin-bottom: 8px; font-size: 0.95rem; }
+        .popup-label { color: #5bc0de; font-weight: bold; display: inline-block; width: 85px; }
+        .popup-value { color: #333; }
+        
+        footer { background: var(--deep-blue); color: white; padding: 30px; text-align: center; }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="logo" data-i18n="logo">💧 台灣河川污染監測</div>
+        <div>
+            <a href="#home" data-i18n="navHome">首頁</a>
+            <a href="#map-section" data-i18n="navMap">即時監測</a>
+            <a href="#report-form-section" data-i18n="navReport">我要通報</a>
+            <button id="langBtn" onclick="toggleLang()" style="background:var(--coral-orange); color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer; font-weight:bold; margin-left:15px;">
+                🌐 English
+            </button>
+        </div>
+    </nav>
+
+    <header class="hero" id="home">
+        <h1 data-i18n="heroTitle">台灣河川污染監測</h1>
+        <p data-i18n="heroDesc">即時監測全國重要河川污染指標，結合全民力量守護環境</p>
+        <a href="#map-section" class="cta-btn" data-i18n="heroBtn">啟動河川監測</a>
+    </header>
+
+    <section id="map-section">
+        <h2 data-i18n="mapTitle">全國河川污染監測圖</h2>
+        <div class="map-wrapper">
+            <div class="dashboard">
+                <h3 data-i18n="mapLegendTitle" style="margin:0 0 15px 0; font-size:1.1rem; border-bottom:1px solid rgba(255,255,255,0.3); padding-bottom:5px;">河川污染等級</h3>
+                <div class="legend-item"><div class="dot" style="background:var(--danger-red)"></div><span data-i18n="legDanger">重度污染 (BOD>8)</span></div>
+                <div class="legend-item"><div class="dot" style="background:var(--warning-yellow)"></div><span data-i18n="legWarning">中度污染 (BOD 4-8)</span></div>
+                <div class="legend-item"><div class="dot" style="background:var(--safe-green)"></div><span data-i18n="legSafe">正常河川 (BOD<4)</span></div>
+                <hr style="opacity:0.3; margin: 15px 0;">
+                <div id="sync-time" style="font-size:0.8rem; color:white;">📡 接收衛星信號中...</div>
+            </div>
+            <div id="map"></div>
+        </div>
+
+        <div class="report-panel" id="river-report">
+            <h3 data-i18n="dataCenter">河川監測數據中心</h3>
+            <div class="toolbar">
+                <div class="filter-group">
+                    <input type="text" id="searchInput" data-i18n="searchPlaceholder" placeholder="🔍 搜尋河川名稱或縣市..." oninput="filterTable()">
+                    <select id="levelFilter" onchange="filterTable()">
+                        <option value="all" data-i18n="filterAll">顯示所有等級</option>
+                        <option value="danger" data-i18n="filterDanger">🔴 重度污染</option>
+                        <option value="warning" data-i18n="filterWarning">🟡 中度污染</option>
+                        <option value="safe" data-i18n="filterSafe">🟢 正常河川</option>
+                    </select>
+                </div>
+                <button class="export-btn" onclick="exportToCSV()" data-i18n="exportBtn">📥 匯出 CSV 報表</button>
+            </div>
+
+            <table class="report-table">
+                <thead>
+                    <tr>
+                        <th data-i18n="thRiver">河川名稱</th>
+                        <th data-i18n="thLevel">污染等級</th>
+                        <th data-i18n="thBod">BOD 數值 (模擬)</th>
+                        <th data-i18n="thStation">測站 / 縣市</th>
+                        <th data-i18n="thTrend">歷史趨勢</th>
+                    </tr>
+                </thead>
+                <tbody id="river-report-body"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <section id="report-form-section">
+        <h2 data-i18n="formTitle">全民通報網：發現污染？</h2>
+        <p style="margin-bottom: 30px;" data-i18n="formDesc">上傳您發現的河川異常狀況，協助政府建立更完善的監測網！</p>
+        <div class="form-container">
+            <form onsubmit="submitReport(event)">
+                <div class="form-group">
+                    <label data-i18n="formLoc">發現地點 (縣市/河川)</label>
+                    <input type="text" id="formInputLoc" required placeholder="例如：新北市 景美溪" data-i18n="formLocPlace">
+                </div>
+                <div class="form-group">
+                    <label data-i18n="formType">污染類型</label>
+                    <select required>
+                        <option value="" data-i18n="formOpt1">請選擇...</option>
+                        <option data-i18n="formOpt2">不明廢水排放 (變色/異味)</option>
+                        <option data-i18n="formOpt3">大量垃圾堆積</option>
+                        <option data-i18n="formOpt4">魚群集體死亡</option>
+                        <option data-i18n="formOpt5">其他</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label data-i18n="formDetail">現場狀況描述</label>
+                    <textarea rows="4" id="formInputDetail" required placeholder="請簡單描述您看到的狀況..." data-i18n="formDetailPlace"></textarea>
+                </div>
+                <button type="submit" class="cta-btn" style="width: 100%;" data-i18n="formSubmit">🚀 送出通報</button>
+            </form>
+        </div>
+    </section>
+
+    <div class="modal-overlay" id="chartModal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">×</span>
+            <h3 id="modalTitle" style="color: var(--deep-blue); margin-top: 0;">河川歷史趨勢</h3>
+            <p style="font-size: 0.9rem; color: #666;" data-i18n="modalDesc">過去六個月生化需氧量 (BOD) 變化模擬圖</p>
+            <canvas id="trendChart" width="400" height="200"></canvas>
+        </div>
+    </div>
+
+    <footer>
+        <p>Group 27 Final Project - Taiwan River Pollution Monitoring System</p>
+        <p style="font-size: 0.8rem; opacity: 0.7; margin-top: 10px;" data-i18n="footerSource">資料來源：政府資料開放平台 | 每30秒更新一次</p>
+    </footer>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script>
+        // --- 語言切換 (i18n) 系統 ---
+        let currentLang = 'zh';
+        const i18n = {
+            zh: {
+                logo: "💧 台灣河川污染監測", navHome: "首頁", navMap: "即時監測", navReport: "我要通報", langBtn: "🌐 English",
+                heroTitle: "台灣河川污染監測", heroDesc: "即時監測全國重要河川污染指標，結合全民力量守護環境", heroBtn: "啟動河川監測",
+                mapTitle: "全國河川污染監測圖", mapLegendTitle: "河川污染等級",
+                legDanger: "重度污染 (BOD>8)", legWarning: "中度污染 (BOD 4-8)", legSafe: "正常河川 (BOD<4)",
+                dataCenter: "河川監測數據中心", searchPlaceholder: "🔍 搜尋河川名稱或縣市...",
+                filterAll: "顯示所有等級", filterDanger: "🔴 重度污染", filterWarning: "🟡 中度污染", filterSafe: "🟢 正常河川", exportBtn: "📥 匯出 CSV 報表",
+                thRiver: "河川名稱", thLevel: "污染等級", thBod: "BOD 數值 (模擬)", thStation: "測站 / 縣市", thTrend: "歷史趨勢",
+                formTitle: "全民通報網：發現污染？", formDesc: "上傳您發現的河川異常狀況，協助政府建立更完善的監測網！",
+                formLoc: "發現地點 (縣市/河川)", formLocPlace: "例如：新北市 景美溪", formType: "污染類型", formOpt1: "請選擇...", formOpt2: "不明廢水排放 (變色/異味)", formOpt3: "大量垃圾堆積", formOpt4: "魚群集體死亡",formOpt5: "其他",
+                formDetail: "現場狀況描述", formDetailPlace: "請簡單描述您看到的狀況...", formSubmit: "🚀 送出通報",
+                modalTitleSuffix: " - 歷史監測圖表", modalDesc: "過去六個月生化需氧量 (BOD) 變化模擬圖", footerSource: "資料來源：政府資料開放平台  | 每30秒更新一次",
+                statusHigh: "高污染", statusMed: "中污染", statusLow: "正常", viewChart: "📊 查看圖表",
+                // 氣泡專用翻譯
+                popupData: "污染數據：", popupGeo: "地理資訊：", popFlow: "總流量", popBod: "BOD", popSS: "懸浮物", popMetal: "重金屬", popOther: "其他污染物",
+                popLng: "經度", popLat: "緯度", popCounty: "縣市", popTown: "鄉鎮", popStation: "測站", unit: "千噸"
+            },
+            en: {
+                logo: "💧 Taiwan River Monitor", navHome: "Home", navMap: "Live Map", navReport: "Report", langBtn: "🌐 中文",
+                heroTitle: "Taiwan River Monitor", heroDesc: "Real-time monitoring of national river pollution to protect our environment together.", heroBtn: "Start Monitoring",
+                mapTitle: "National River Pollution Map", mapLegendTitle: "Pollution Levels",
+                legDanger: "Severe (BOD>8)", legWarning: "Moderate (BOD 4-8)", legSafe: "Normal (BOD<4)",
+                dataCenter: "River Data Center", searchPlaceholder: "🔍 Search river or city...",
+                filterAll: "All Levels", filterDanger: "🔴 Severe", filterWarning: "🟡 Moderate", filterSafe: "🟢 Normal", exportBtn: "📥 Export CSV",
+                thRiver: "River Name", thLevel: "Level", thBod: "BOD Value", thStation: "Station / City", thTrend: "Trend",
+                formTitle: "Public Report: Found Pollution?", formDesc: "Upload abnormal river conditions to help build a better monitoring network!",
+                formLoc: "Location (City/River)", formLocPlace: "e.g., Taipei, Tamsui River", formType: "Pollution Type", formOpt1: "Select...", formOpt2: "Unknown Wastewater", formOpt3: "Massive Trash", formOpt4: "Dead Fish", formOpt5: "Other",
+                formDetail: "Description", formDetailPlace: "Describe what you saw...", formSubmit: "🚀 Submit ",
+                modalTitleSuffix: " - Historical Trend", modalDesc: "Simulated BOD changes over the past 6 months", footerSource: "Data Source: Open Government Data GISEPA_P_28 | Auto-update every 30s",
+                statusHigh: "Severe", statusMed: "Moderate", statusLow: "Normal", viewChart: "📊 View Chart",
+                // 氣泡專用翻譯
+                popupData: "Data:", popupGeo: "Geo Info:", popFlow: "Flow", popBod: "BOD", popSS: "SS", popMetal: "Metals", popOther: "Others",
+                popLng: "Lng", popLat: "Lat", popCounty: "City", popTown: "Town", popStation: "Station", unit: "k-tons"
+            }
+        };
+
+        function toggleLang() {
+            currentLang = currentLang === 'zh' ? 'en' : 'zh';
+            document.getElementById('langBtn').innerText = i18n[currentLang].langBtn;
+            
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (i18n[currentLang][key]) {
+                    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') { el.placeholder = i18n[currentLang][key]; } 
+                    else { el.innerText = i18n[currentLang][key]; }
+                }
+            });
+            updateData(); 
+        }
+
+        // --- 地圖與 API 初始化 ---
+        var map = L.map('map', {
+            center: [23.7, 121.0], zoom: 7.5, zoomControl: false, maxBounds: [[20, 116], [27, 124]] 
+        });
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+        L.tileLayer.wms('https://geoinfo.moi.gov.tw/MoiWMS/wms', { layers: 'HYDRO_WATERCOURSE', format: 'image/png', transparent: true }).addTo(map);
+        var markersLayer = L.layerGroup().addTo(map);
+        var statusColors = { danger: "#ff4d4d", warning: "#ffcc00", safe: "#33cc33" };
+
+        let globalReportData = [];
+        let trendChartInstance = null;
+
+        async function updateData() {
+            const syncText = currentLang === 'zh' ? "📡 正在接收數據..." : "📡 Receiving data...";
+            document.getElementById('sync-time').innerText = syncText;
+            try {
+                const apiKey = "3e2396a4-442f-40ed-81d8-4f0dfd103f00";
+                const response1 = await fetch(`https://data.moenv.gov.tw/api/v2/STAT_P_120?format=json&limit=100&api_key=${apiKey}`);
+                const response2 = await fetch(`https://data.moenv.gov.tw/api/v2/GISEPA_P_28?format=json&limit=100&api_key=${apiKey}`);
+                const data1 = await response1.json();
+                const data2 = await response2.json();
+
+                markersLayer.clearLayers();
+                globalReportData = [];
+
+                const latestData1 = data1.filter(item => item.item1 === "114年");
+                const latestData2 = data2.filter(item => !item.item1 || item.item1 === "114年");
+
+                const riverLocationMap = {};
+                latestData2.forEach(item => {
+                    if (item.twd97_lat && item.twd97_lon) {
+                        riverLocationMap[item.riv_name] = {
+                            lat: parseFloat(item.twd97_lat), lng: parseFloat(item.twd97_lon),
+                            stationName: item.stname, county: item.countyname, town: item.townname
+                        };
+                    }
+                });
+
+                const t = i18n[currentLang];
+
+                latestData1.forEach(item => {
+                    const riverName = item.item2;
+                    const val1 = parseFloat(item.value1) || 0;
+                    const val2 = parseFloat(item.value2) || 0;
+                    const val3 = parseFloat(item.value3) || 0;
+                    const val4 = parseFloat(item.value4) || 0;
+                    const val5 = parseFloat(item.value5) || 0;
+                    const pollutionRatio = val1 > 0 ? (val2 / val1) : 0;
+                    const level = pollutionRatio > 0.7 ? "danger" : pollutionRatio > 0.4 ? "warning" : "safe";
+                    const location = riverLocationMap[riverName];
+
+                    if(location) {
+                        globalReportData.push({
+                            riverName: riverName, level: level, ratio: pollutionRatio,
+                            county: location.county, town: location.town, station: location.stationName,
+                            lat: location.lat, lng: location.lng
+                        });
+
+                        const color = statusColors[level];
+                        const icon = L.divIcon({
+                            className: 'radar-ping',
+                            html: `<div style="background:${color}; width:12px; height:12px; border-radius:50%; border:2px solid white;"><div style="width:100%; height:100%; border-radius:50%; border:2px solid ${color}; animation:pulse 2s infinite ease-out;"></div></div>`,
+                            iconSize: [12, 12], iconAnchor: [6, 6]
+                        });
+                        
+                        // 氣泡文字邏輯
+                        const levelBadge = level === 'danger' ? `⚠️ 高污染等級` : (level === 'warning' ? `🟡 中污染等級` : `✅ 正常等級`);
+                        const badgeColor = level === 'warning' ? '#000' : '#fff';
+                        
+                        const popupContent = `
+                            <div class="popup-container">
+                                <div class="popup-title">${riverName}</div>
+                                <div class="popup-subtitle">📍 ${location.county} ${location.town} | ${t.popStation}：${location.stationName}</div>
+                                <div class="popup-badge" style="background-color: ${color}; color: ${badgeColor};">
+                                    ${level === 'danger' ? `⚠️ ${t.statusHigh} Level` : (level === 'warning' ? `🟡 ${t.statusMed} Level` : `✅ ${t.statusLow} Level`)}
+                                </div>
+                                
+                                <div class="popup-section popup-data-blue">
+                                    <div class="popup-section-title">📊 ${t.popupData}</div>
+                                    <div class="popup-row"><span class="popup-label">${t.popFlow}：</span> <span class="popup-value">${val1.toFixed(2)} ${t.unit}</span></div>
+                                    <div class="popup-row"><span class="popup-label">${t.popBod}：</span> <span class="popup-value">${val2.toFixed(2)} ${t.unit}</span></div>
+                                    <div class="popup-row"><span class="popup-label">${t.popSS}：</span> <span class="popup-value">${val3.toFixed(2)} ${t.unit}</span></div>
+                                    <div class="popup-row"><span class="popup-label">${t.popMetal}：</span> <span class="popup-value">${val4.toFixed(2)} ${t.unit}</span></div>
+                                    <div class="popup-row"><span class="popup-label">${t.popOther}：</span> <span class="popup-value">${val5.toFixed(2)} ${t.unit}</span></div>
+                                </div>
+
+                                <div class="popup-section popup-data-red">
+                                    <div class="popup-section-title">📍 ${t.popupGeo}</div>
+                                    <div class="popup-row"><span class="popup-label">${t.popLng}：</span> <span class="popup-value">${location.lng.toFixed(6)}</span></div>
+                                    <div class="popup-row"><span class="popup-label">${t.popLat}：</span> <span class="popup-value">${location.lat.toFixed(6)}</span></div>
+                                    <div class="popup-row"><span class="popup-label">${t.popCounty}：</span> <span class="popup-value">${location.county}</span></div>
+                                    <div class="popup-row"><span class="popup-label">${t.popTown}：</span> <span class="popup-value">${location.town}</span></div>
+                                    <div class="popup-row"><span class="popup-label">${t.popStation}：</span> <span class="popup-value">${location.stationName}</span></div>
+                                </div>
+                            </div>
+                        `;
+                        
+                        L.marker([location.lat, location.lng], { icon: icon })
+                            .addTo(markersLayer)
+                            .bindPopup(popupContent, { 
+                                minWidth: 260, 
+                                maxWidth: 320, 
+                                className: 'custom-popup',
+                                maxHeight: 380,  
+                                autoPanPadding: [30, 30] 
+                            });
+                    }
+                });
+
+                const syncDoneText = currentLang === 'zh' ? "🕒 最後同步：" : "🕒 Last sync: ";
+                document.getElementById('sync-time').innerText = syncDoneText + new Date().toLocaleTimeString();
+                renderTable(globalReportData);
+            } catch (error) {
+                console.error(error);
+                document.getElementById('sync-time').innerText = currentLang === 'zh' ? "❌ 更新失敗" : "❌ Sync Failed";
+            }
+        }
+
+        // --- 渲染與篩選表格 ---
+        function renderTable(data) {
+            const tbody = document.getElementById('river-report-body');
+            const t = i18n[currentLang];
+            tbody.innerHTML = data.map(row => {
+                const statusClass = row.level === 'danger' ? 'status-danger' : row.level === 'warning' ? 'status-warning' : 'status-safe';
+                const statusText = row.level === 'danger' ? t.statusHigh : row.level === 'warning' ? t.statusMed : t.statusLow;
+                return `
+                    <tr>
+                        <td><strong>${row.riverName}</strong></td>
+                        <td><span class="status-dot ${statusClass}"></span>${statusText}</td>
+                        <td>${(row.ratio * 10).toFixed(2)}</td>
+                        <td>${row.county} ${row.town} / ${row.station}</td>
+                        <td><button class="detail-btn" onclick="openModal('${row.riverName}', '${row.level}')">${t.viewChart}</button></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function filterTable() {
+            const searchText = document.getElementById('searchInput').value.toLowerCase();
+            const levelFilter = document.getElementById('levelFilter').value;
+            const filteredData = globalReportData.filter(row => {
+                const matchText = row.riverName.includes(searchText) || row.county.includes(searchText);
+                const matchLevel = levelFilter === 'all' || row.level === levelFilter;
+                return matchText && matchLevel;
+            });
+            renderTable(filteredData);
+        }
+
+        // --- 匯出 CSV 報表 ---
+        function exportToCSV() {
+            const rows = document.querySelectorAll("#river-report-body tr");
+            const t = i18n[currentLang];
+            let csvContent = `${t.thRiver},${t.thLevel},${t.thBod},${t.thStation}\n`;
+            rows.forEach(row => {
+                let cols = row.querySelectorAll("td");
+                if(cols.length > 0) {
+                    csvContent += `${cols[0].innerText},${cols[1].innerText},${cols[2].innerText},${cols[3].innerText}\n`;
+                }
+            });
+            const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = currentLang === 'zh' ? "河川監測報表.csv" : "River_Report.csv";
+            link.click();
+        }
+
+        // --- Modal 與歷史趨勢圖 (Chart.js) ---
+        function openModal(riverName, level) {
+            document.getElementById('chartModal').style.display = 'flex';
+            const t = i18n[currentLang];
+            document.getElementById('modalTitle').innerText = `${riverName}${t.modalTitleSuffix}`;
+            const baseValue = level === 'danger' ? 8 : (level === 'warning' ? 5 : 2);
+            const mockData = Array.from({length: 6}, () => baseValue + (Math.random() * 2 - 1));
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            if(trendChartInstance) { trendChartInstance.destroy(); }
+            trendChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: currentLang === 'zh' ? ['10月', '11月', '12月', '1月', '2月', '3月'] : ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'],
+                    datasets: [{ label: 'BOD', data: mockData, borderColor: '#FF7F50', backgroundColor: 'rgba(255, 127, 80, 0.2)', borderWidth: 2, fill: true, tension: 0.4 }]
+                },
+                options: { scales: { y: { beginAtZero: true, max: 12 } } }
+            });
+        }
+
+        function closeModal() { document.getElementById('chartModal').style.display = 'none'; }
+
+        function submitReport(event) {
+            event.preventDefault();
+            const msg = currentLang === 'zh' ? 
+                "🎉 通報成功！感謝您守護台灣河川環境" : 
+                "🎉 Report Submitted! Thank you for protecting Taiwan's rivers";
+            alert(msg);
+            event.target.reset();
+        }
+
+        updateData();
+        setInterval(updateData, 30000);
+    </script>
+</body>
+</html>
