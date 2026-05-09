@@ -482,5 +482,67 @@
         updateData();
         setInterval(updateData, 30000);
     </script>
+    <!-- 選項三：定位我的位置擴充功能 -->
+<style>
+    .locate-btn {
+        position: absolute;
+        bottom: 25px;
+        right: 20px;
+        z-index: 1000; /* 必須高於地圖圖層 */
+        background: white;
+        color: var(--deep-blue);
+        border: 2px solid rgba(0,0,0,0.2);
+        border-radius: 8px;
+        padding: 10px 15px;
+        cursor: pointer;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        font-weight: bold;
+        transition: 0.3s;
+    }
+    .locate-btn:hover { background: #f0f4f8; transform: scale(1.05); }
+</style>
+<script>
+    // 取得現有的 map-wrapper 容器
+    const mapWrapper = document.querySelector('.map-wrapper');
+    const locateBtn = document.createElement('button');
+    locateBtn.className = 'locate-btn';
+    locateBtn.innerHTML = '📍 定位我的位置';
+    mapWrapper.appendChild(locateBtn);
+
+    // 新增定位標記的變數，避免重複標記
+    let userMarker = null;
+
+    locateBtn.addEventListener('click', () => {
+        if (navigator.geolocation) {
+            locateBtn.innerHTML = '⏳ 定位中...';
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    
+                    // 移動地圖並縮放
+                    map.setView([lat, lng], 12);
+                    
+                    // 如果之前有定位標記，先移除
+                    if (userMarker) { map.removeLayer(userMarker); }
+                    
+                    // 加入使用者圖示
+                    userMarker = L.marker([lat, lng]).addTo(map)
+                        .bindPopup('<b>您目前的位置</b>').openPopup();
+                        
+                    locateBtn.innerHTML = '📍 定位我的位置';
+                }, 
+                (error) => {
+                    console.warn(error);
+                    alert(currentLang === 'zh' ? '無法獲取位置，請確認是否開啟瀏覽器定位權限。' : 'Unable to retrieve location. Please check permissions.');
+                    locateBtn.innerHTML = '📍 定位我的位置';
+                },
+                { enableHighAccuracy: true } // 請求高精度定位
+            );
+        } else {
+            alert(currentLang === 'zh' ? '您的瀏覽器不支援地理定位功能。' : 'Geolocation is not supported by your browser.');
+        }
+    });
+</script>
 </body>
 </html>
