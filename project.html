@@ -284,9 +284,17 @@
         }
 
         // --- 地圖與 API 初始化 ---
+        const taiwanBounds = [[18, 110], [30, 125]];
         var map = L.map('map', {
-            center: [23.7, 121.0], zoom: 7.5, zoomControl: false, maxBounds: [[20, 116], [27, 124]] 
+            center: [23.7, 121.0],
+            zoom: 7.5,
+            minZoom: 7.5,
+            maxZoom: 16,
+            zoomControl: false,
+            maxBounds: taiwanBounds,
+            maxBoundsViscosity: 1.0
         });
+        map.setMaxBounds(taiwanBounds);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
         L.tileLayer.wms('https://geoinfo.moi.gov.tw/MoiWMS/wms', { layers: 'HYDRO_WATERCOURSE', format: 'image/png', transparent: true }).addTo(map);
         var markersLayer = L.layerGroup().addTo(map);
@@ -482,5 +490,122 @@
         updateData();
         setInterval(updateData, 30000);
     </script>
+<style>
+    .locate-btn {
+        position: absolute; bottom: 25px; right: 20px; z-index: 1000; 
+        background: white; color: var(--deep-blue); border: 2px solid rgba(0,0,0,0.2);
+        border-radius: 8px; padding: 10px 15px; cursor: pointer;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3); font-weight: bold; transition: 0.3s;
+    }
+    .locate-btn:hover { background: #f0f4f8; transform: scale(1.05); }
+
+    .smart-toast {
+        position: fixed; top: -150px; left: 50%; transform: translateX(-50%);
+        background: white; padding: 20px 25px; border-radius: 12px;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.25); z-index: 9999;
+        text-align: center; min-width: 300px; border-top: 5px solid var(--coral-orange);
+        transition: top 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55), opacity 0.5s ease;
+        opacity: 0; pointer-events: none;
+    }
+</style>
+<script>
+    const mapWrapper = document.querySelector('.map-wrapper');
+    const locateBtn = document.createElement('button');
+    locateBtn.className = 'locate-btn';
+    locateBtn.innerHTML = '📍 智慧定位與警示';
+    mapWrapper.appendChild(locateBtn);
+
+    const toastCard = document.createElement('div');
+    toastCard.className = 'smart-toast';
+    document.body.appendChild(toastCard);
+
+    let userMarker = null;
+
+    function getDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                  Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c;
+    }
+
+    locateBtn.addEventListener('click', () => {
+        if (navigator.geolocation) {
+            locateBtn.innerHTML = '⏳ 分析最近水域...';
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const userLat = position.coords.latitude;
+                    const userLng = position.coords.longitude;
+                    
+                    map.setView([userLat, userLng], 12);
+                    if (userMarker) { map.removeLayer(userMarker); }
+                    
+                    const userIcon = L.divIcon({
+                        html: '<div style="background:#007bff; width:16px; height:16px; border-radius:50%; border:3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.5);"></div>',
+                        iconSize: [16, 16], className: 'user-ping'
+                    });
+                    userMarker = L.marker([userLat, userLng], {icon: userIcon}).addTo(map)
+                        .bindPopup('<b style="color:#007bff;">📍 您的當前位置</b>').openPopup();
+
+                    if (typeof globalReportData !== 'undefined' && globalReportData.length > 0) {
+                        let nearestStation = null;
+                        let minDistance = Infinity;
+
+                        globalReportData.forEach(station => {
+                            const dist = getDistance(userLat, userLng, station.lat, station.lng);
+                            if (dist < minDistance) {
+                                minDistance = dist;
+                                nearestStation = station;
+                            }
+                        });
+
+                        if (nearestStation) {
+                            const isEn = typeof currentLang !== 'undefined' && currentLang === 'en';
+                            const statusColor = nearestStation.level === 'danger' ? 'var(--danger-red)' : (nearestStation.level === 'warning' ? 'var(--warning-yellow)' : 'var(--safe-green)');
+                            const statusText = nearestStation.level === 'danger' ? (isEn ? '🔴 Severe' : '🔴 重度污染') : 
+                                              (nearestStation.level === 'warning' ? (isEn ? '🟡 Moderate' : '🟡 中度污染') : (isEn ? '🟢 Normal' : '🟢 正常安全'));
+                            
+                            toastCard.innerHTML = `
+                                <h3 style="margin:0 0 10px 0; color:var(--deep-blue);">
+                                    ${isEn ? '📍 Nearest River Alert' : '📍 鄰近河川智慧警示'}
+                                </h3>
+                                <p style="margin:5px 0; font-size:1.1rem;">
+                                    ${isEn ? 'Nearest river is' : '距離您最近的是'} <strong>${nearestStation.riverName}</strong>
+                                </p>
+                                <p style="margin:5px 0; font-size:0.85rem; color:#666;">
+                                    ${nearestStation.county} ${nearestStation.town} (${nearestStation.station})<br>
+                                    ${isEn ? 'Distance:' : '直線距離約'} <strong>${minDistance.toFixed(1)} km</strong>
+                                </p>
+                                <div style="margin-top:15px; padding:10px; background:#f5faff; border-radius:8px; border: 1px solid #e6eef7;">
+                                    ${isEn ? 'Current Status:' : '目前水質狀態：'} <strong style="color:${statusColor}; font-size:1.1rem;">${statusText}</strong>
+                                </div>
+                            `;
+                            
+                            toastCard.style.opacity = '1';
+                            toastCard.style.top = '100px';
+
+                            setTimeout(() => {
+                                toastCard.style.opacity = '0';
+                                toastCard.style.top = '-150px';
+                            }, 8000);
+                        }
+                    }
+
+                    locateBtn.innerHTML = '📍 智慧定位與警示';
+                }, 
+                (error) => {
+                    console.warn(error);
+                    alert('無法獲取位置，請確認是否開啟瀏覽器 GPS 定位權限。');
+                    locateBtn.innerHTML = '📍 智慧定位與警示';
+                },
+                { enableHighAccuracy: true }
+            );
+        }
+    });
+</script>
+
 </body>
 </html>

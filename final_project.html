@@ -167,12 +167,17 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
+        const taiwanBounds = [[18, 110], [30, 125]];
         var map = L.map('map', {
             center: [23.7, 121.0],
             zoom: 7.5,
+            minZoom: 7.5,
+            maxZoom: 16,
             zoomControl: false,
-            maxBounds: [[20, 116], [27, 124]] 
+            maxBounds: taiwanBounds,
+            maxBoundsViscosity: 1.0
         });
+        map.setMaxBounds(taiwanBounds);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
@@ -392,14 +397,12 @@
                 });
 
                 if (location) {
-                    const marker = L.circleMarker([location.lat, location.lng], {
-                        radius: 5,
-                        color: color,
-                        fillColor: color,
-                        fillOpacity: 0.85,
-                        weight: 1,
-                        opacity: 1
+                    const icon = L.divIcon({
+                        className: 'radar-ping',
+                        html: `<div style="background:${color}; width:12px; height:12px; border-radius:50%; border:2px solid white;"><div style="width:100%; height:100%; border-radius:50%; border:2px solid ${color}; animation:pulse 2s infinite ease-out;"></div></div>`,
+                        iconSize: [12, 12], iconAnchor: [6, 6]
                     });
+                    const marker = L.marker([location.lat, location.lng], { icon: icon });
                     const popupContent = `
                         <div style="min-width: 320px;">
                             <div style="border-bottom: 2px solid #FF7F50; padding-bottom: 8px; margin-bottom: 10px;">
@@ -635,12 +638,12 @@
                 if (item.hasLocation) {
                     mappedCount += 1;
                     const marker = L.circleMarker([item.lat, item.lng], {
-                        radius: 6,
-                        color: color,
+                        radius: 8,
                         fillColor: color,
-                        fillOpacity: 0.9,
-                        weight: 1,
-                        opacity: 1
+                        color: '#fff',
+                        weight: 2,
+                        opacity: 1,
+                        fillOpacity: 0.8
                     });
                     const stationDetails = item.stations.length > 0 ? item.stations.map(s => `
                         <div style="margin-top: 8px; padding: 8px; background: rgba(255,255,255,0.6); border-radius: 5px; font-size: 0.85em;">
