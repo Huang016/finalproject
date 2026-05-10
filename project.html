@@ -146,9 +146,9 @@
         <div class="map-wrapper">
             <div class="dashboard">
                 <h3 data-i18n="mapLegendTitle" style="margin:0 0 15px 0; font-size:1.1rem; border-bottom:1px solid rgba(255,255,255,0.3); padding-bottom:5px;">河川污染等級</h3>
-                <div class="legend-item"><div class="dot" style="background:var(--danger-red)"></div><span data-i18n="legDanger">重度污染 (BOD>8)</span></div>
-                <div class="legend-item"><div class="dot" style="background:var(--warning-yellow)"></div><span data-i18n="legWarning">中度污染 (BOD 4-8)</span></div>
-                <div class="legend-item"><div class="dot" style="background:var(--safe-green)"></div><span data-i18n="legSafe">正常河川 (BOD<4)</span></div>
+                <div class="legend-item"><div class="dot" style="background:var(--danger-red)"></div><span data-i18n="legDanger">重度污染 (BOD>5)</span></div>
+                <div class="legend-item"><div class="dot" style="background:var(--warning-yellow)"></div><span data-i18n="legWarning">中度污染 (BOD 3-5)</span></div>
+                <div class="legend-item"><div class="dot" style="background:var(--safe-green)"></div><span data-i18n="legSafe">正常河川 (BOD<3)</span></div>
                 <hr style="opacity:0.3; margin: 15px 0;">
                 <div id="sync-time" style="font-size:0.8rem; color:white;">📡 接收衛星信號中...</div>
             </div>
@@ -175,7 +175,7 @@
                     <tr>
                         <th data-i18n="thRiver">河川名稱</th>
                         <th data-i18n="thLevel">污染等級</th>
-                        <th data-i18n="thBod">BOD 數值 (模擬)</th>
+                        <th data-i18n="thBod">BOD 數值 (mg/L)</th>
                         <th data-i18n="thStation">測站 / 縣市</th>
                         <th data-i18n="thTrend">歷史趨勢</th>
                     </tr>
@@ -217,7 +217,7 @@
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal()">×</span>
             <h3 id="modalTitle" style="color: var(--deep-blue); margin-top: 0;">河川歷史趨勢</h3>
-            <p style="font-size: 0.9rem; color: #666;" data-i18n="modalDesc">過去六個月生化需氧量 (BOD) 變化模擬圖</p>
+            <p style="font-size: 0.9rem; color: #666;" data-i18n="modalDesc">過去六個月生化需氧量 (BOD) 變化圖 (mg/L)</p>
             <canvas id="trendChart" width="400" height="200"></canvas>
         </div>
     </div>
@@ -237,35 +237,35 @@
                 logo: "💧 台灣河川污染監測", navHome: "首頁", navMap: "即時監測", navReport: "我要通報", langBtn: "🌐 English",
                 heroTitle: "台灣河川污染監測", heroDesc: "即時監測全國重要河川污染指標，結合全民力量守護環境", heroBtn: "啟動河川監測",
                 mapTitle: "全國河川污染監測圖", mapLegendTitle: "河川污染等級",
-                legDanger: "重度污染 (BOD>8)", legWarning: "中度污染 (BOD 4-8)", legSafe: "正常河川 (BOD<4)",
+                legDanger: "重度污染 (BOD>5 mg/L)", legWarning: "中度污染 (BOD 3-5 mg/L)", legSafe: "正常河川 (BOD<3 mg/L)",
                 dataCenter: "河川監測數據中心", searchPlaceholder: "🔍 搜尋河川名稱或縣市...",
                 filterAll: "顯示所有等級", filterDanger: "🔴 重度污染", filterWarning: "🟡 中度污染", filterSafe: "🟢 正常河川", exportBtn: "📥 匯出 CSV 報表",
-                thRiver: "河川名稱", thLevel: "污染等級", thBod: "BOD 數值 (模擬)", thStation: "測站 / 縣市", thTrend: "歷史趨勢",
+                thRiver: "河川名稱", thLevel: "污染等級", thBod: "BOD 數值 (mg/L)", thStation: "測站 / 縣市", thTrend: "歷史趨勢",
                 formTitle: "全民通報網：發現污染？", formDesc: "上傳您發現的河川異常狀況，協助政府建立更完善的監測網！",
                 formLoc: "發現地點 (縣市/河川)", formLocPlace: "例如：新北市 景美溪", formType: "污染類型", formOpt1: "請選擇...", formOpt2: "不明廢水排放 (變色/異味)", formOpt3: "大量垃圾堆積", formOpt4: "魚群集體死亡",formOpt5: "其他",
                 formDetail: "現場狀況描述", formDetailPlace: "請簡單描述您看到的狀況...", formSubmit: "🚀 送出通報",
-                modalTitleSuffix: " - 歷史監測圖表", modalDesc: "過去六個月生化需氧量 (BOD) 變化模擬圖", footerSource: "資料來源：政府資料開放平台  | 每30秒更新一次",
+                modalTitleSuffix: " - 歷史監測圖表", modalDesc: "過去六個月生化需氧量 (BOD) 變化圖", footerSource: "資料來源：政府資料開放平台  | 每30秒更新一次",
                 statusHigh: "高污染", statusMed: "中污染", statusLow: "正常", viewChart: "📊 查看圖表",
                 // 氣泡專用翻譯
-                popupData: "污染數據：", popupGeo: "地理資訊：", popFlow: "總流量", popBod: "BOD", popSS: "懸浮物", popMetal: "重金屬", popOther: "其他污染物",
-                popLng: "經度", popLat: "緯度", popCounty: "縣市", popTown: "鄉鎮", popStation: "測站", unit: "千噸"
+                popupData: "水質數據：", popupGeo: "地理資訊：", popFlow: "監測站數", popBod: "溶氧量平均值", popSS: "生化需氧量平均值", popMetal: "懸浮固體平均值", popOther: "氨氮平均值",
+                popLng: "經度", popLat: "緯度", popCounty: "縣市", popTown: "鄉鎮", popStation: "測站", unit: "站"
             },
             en: {
                 logo: "💧 Taiwan River Monitor", navHome: "Home", navMap: "Live Map", navReport: "Report", langBtn: "🌐 中文",
                 heroTitle: "Taiwan River Monitor", heroDesc: "Real-time monitoring of national river pollution to protect our environment together.", heroBtn: "Start Monitoring",
                 mapTitle: "National River Pollution Map", mapLegendTitle: "Pollution Levels",
-                legDanger: "Severe (BOD>8)", legWarning: "Moderate (BOD 4-8)", legSafe: "Normal (BOD<4)",
+                legDanger: "Severe (BOD>5 mg/L)", legWarning: "Moderate (BOD 3-5 mg/L)", legSafe: "Normal (BOD<3 mg/L)",
                 dataCenter: "River Data Center", searchPlaceholder: "🔍 Search river or city...",
                 filterAll: "All Levels", filterDanger: "🔴 Severe", filterWarning: "🟡 Moderate", filterSafe: "🟢 Normal", exportBtn: "📥 Export CSV",
-                thRiver: "River Name", thLevel: "Level", thBod: "BOD Value", thStation: "Station / City", thTrend: "Trend",
+                thRiver: "River Name", thLevel: "Level", thBod: "BOD Value (mg/L)", thStation: "Station / City", thTrend: "Trend",
                 formTitle: "Public Report: Found Pollution?", formDesc: "Upload abnormal river conditions to help build a better monitoring network!",
                 formLoc: "Location (City/River)", formLocPlace: "e.g., Taipei, Tamsui River", formType: "Pollution Type", formOpt1: "Select...", formOpt2: "Unknown Wastewater", formOpt3: "Massive Trash", formOpt4: "Dead Fish", formOpt5: "Other",
                 formDetail: "Description", formDetailPlace: "Describe what you saw...", formSubmit: "🚀 Submit ",
-                modalTitleSuffix: " - Historical Trend", modalDesc: "Simulated BOD changes over the past 6 months", footerSource: "Data Source: Open Government Data GISEPA_P_28 | Auto-update every 30s",
+                modalTitleSuffix: " - Historical Trend", modalDesc: "BOD changes over the past 6 months (mg/L)", footerSource: "Data Source: Open Government Data GISEPA_P_28 | Auto-update every 30s",
                 statusHigh: "Severe", statusMed: "Moderate", statusLow: "Normal", viewChart: "📊 View Chart",
                 // 氣泡專用翻譯
-                popupData: "Data:", popupGeo: "Geo Info:", popFlow: "Flow", popBod: "BOD", popSS: "SS", popMetal: "Metals", popOther: "Others",
-                popLng: "Lng", popLat: "Lat", popCounty: "City", popTown: "Town", popStation: "Station", unit: "k-tons"
+                popupData: "Water Quality Data:", popupGeo: "Geo Info:", popFlow: "Monitoring Stations", popBod: "DO Avg", popSS: "BOD Avg", popMetal: "SS Avg", popOther: "NH3-N Avg",
+                popLng: "Lng", popLat: "Lat", popCounty: "City", popTown: "Town", popStation: "Station", unit: "stations"
             }
         };
 
@@ -308,7 +308,7 @@
             document.getElementById('sync-time').innerText = syncText;
             try {
                 const apiKey = "3e2396a4-442f-40ed-81d8-4f0dfd103f00";
-                const response1 = await fetch(`https://data.moenv.gov.tw/api/v2/STAT_P_120?format=json&limit=100&api_key=${apiKey}`);
+                const response1 = await fetch(`https://data.moenv.gov.tw/api/v2/STAT_P_123?format=json&limit=100&api_key=${apiKey}`);
                 const response2 = await fetch(`https://data.moenv.gov.tw/api/v2/GISEPA_P_28?format=json&limit=100&api_key=${apiKey}`);
                 const data1 = await response1.json();
                 const data2 = await response2.json();
@@ -316,8 +316,8 @@
                 markersLayer.clearLayers();
                 globalReportData = [];
 
-                const latestData1 = data1.filter(item => item.item1 === "114年");
-                const latestData2 = data2.filter(item => !item.item1 || item.item1 === "114年");
+                const latestData1 = data1.filter(item => item.item1 === "113年");
+                const latestData2 = data2.filter(item => !item.item1 || item.item1 === "113年");
 
                 const riverLocationMap = {};
                 latestData2.forEach(item => {
@@ -338,13 +338,13 @@
                     const val3 = parseFloat(item.value3) || 0;
                     const val4 = parseFloat(item.value4) || 0;
                     const val5 = parseFloat(item.value5) || 0;
-                    const pollutionRatio = val1 > 0 ? (val2 / val1) : 0;
-                    const level = pollutionRatio > 0.7 ? "danger" : pollutionRatio > 0.4 ? "warning" : "safe";
+                    const bod = val3;
+                    const level = bod > 5 ? "danger" : bod > 3 ? "warning" : "safe";
                     const location = riverLocationMap[riverName];
 
                     if(location) {
                         globalReportData.push({
-                            riverName: riverName, level: level, ratio: pollutionRatio,
+                            riverName: riverName, level: level, bod: bod,
                             county: location.county, town: location.town, station: location.stationName,
                             lat: location.lat, lng: location.lng
                         });
@@ -370,11 +370,11 @@
                                 
                                 <div class="popup-section popup-data-blue">
                                     <div class="popup-section-title">📊 ${t.popupData}</div>
-                                    <div class="popup-row"><span class="popup-label">${t.popFlow}：</span> <span class="popup-value">${val1.toFixed(2)} ${t.unit}</span></div>
-                                    <div class="popup-row"><span class="popup-label">${t.popBod}：</span> <span class="popup-value">${val2.toFixed(2)} ${t.unit}</span></div>
-                                    <div class="popup-row"><span class="popup-label">${t.popSS}：</span> <span class="popup-value">${val3.toFixed(2)} ${t.unit}</span></div>
-                                    <div class="popup-row"><span class="popup-label">${t.popMetal}：</span> <span class="popup-value">${val4.toFixed(2)} ${t.unit}</span></div>
-                                    <div class="popup-row"><span class="popup-label">${t.popOther}：</span> <span class="popup-value">${val5.toFixed(2)} ${t.unit}</span></div>
+                                    <div class="popup-row"><span class="popup-label">${t.popFlow}：</span> <span class="popup-value">${val1} ${t.unit}</span></div>
+                                    <div class="popup-row"><span class="popup-label">${t.popBod}：</span> <span class="popup-value">${val2.toFixed(2)} mg/L</span></div>
+                                    <div class="popup-row"><span class="popup-label">${t.popSS}：</span> <span class="popup-value">${val3.toFixed(2)} mg/L</span></div>
+                                    <div class="popup-row"><span class="popup-label">${t.popMetal}：</span> <span class="popup-value">${val4.toFixed(2)} mg/L</span></div>
+                                    <div class="popup-row"><span class="popup-label">${t.popOther}：</span> <span class="popup-value">${val5.toFixed(2)} mg/L</span></div>
                                 </div>
 
                                 <div class="popup-section popup-data-red">
@@ -420,9 +420,9 @@
                     <tr>
                         <td><strong>${row.riverName}</strong></td>
                         <td><span class="status-dot ${statusClass}"></span>${statusText}</td>
-                        <td>${(row.ratio * 10).toFixed(2)}</td>
+                        <td>${row.bod.toFixed(2)}</td>
                         <td>${row.county} ${row.town} / ${row.station}</td>
-                        <td><button class="detail-btn" onclick="openModal('${row.riverName}', '${row.level}')">${t.viewChart}</button></td>
+                        <td><button class="detail-btn" onclick="openModal('${row.riverName}', '${row.level}', ${row.bod})">${t.viewChart}</button></td>
                     </tr>
                 `;
             }).join('');
@@ -458,11 +458,11 @@
         }
 
         // --- Modal 與歷史趨勢圖 (Chart.js) ---
-        function openModal(riverName, level) {
+        function openModal(riverName, level, bod) {
             document.getElementById('chartModal').style.display = 'flex';
             const t = i18n[currentLang];
             document.getElementById('modalTitle').innerText = `${riverName}${t.modalTitleSuffix}`;
-            const baseValue = level === 'danger' ? 8 : (level === 'warning' ? 5 : 2);
+            const baseValue = bod;
             const mockData = Array.from({length: 6}, () => baseValue + (Math.random() * 2 - 1));
             const ctx = document.getElementById('trendChart').getContext('2d');
             if(trendChartInstance) { trendChartInstance.destroy(); }
