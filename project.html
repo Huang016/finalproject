@@ -603,46 +603,73 @@
         };
 
         // 5. 提交表單寫入 Firestore
+        // 5. 提交表單寫入 Firestore (終極防護版)
         window.submitReport = async function(event) {
-            event.preventDefault();
-            const loc = document.getElementById('formInputLoc').value;
-            const type = document.getElementById('formInputType').value;
-            const detail = document.getElementById('formInputDetail').value;
-            const imageFile = document.getElementById('formImage').files[0];
-
-            let base64Image = null;
-            if (imageFile) {
-                if (imageFile.size > 500 * 1024) { alert("⚠️ 圖片請小於 500KB"); return; }
-                base64Image = await getBase64(imageFile);
-            }
-
-            let uid = "anonymous"; let uName = "訪客 (未登入)";
-            if (currentUser) { uid = currentUser.uid; uName = currentUser.displayName; }
+            event.preventDefault(); // 防止網頁重新整理
+            
+            // 抓取送出按鈕，並鎖定防連點
+            const submitBtn = event.target.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.innerText = "⏳ 傳送中，請稍候...";
 
             try {
+                console.log("1. 開始讀取表單資料...");
+                const loc = document.getElementById('formInputLoc').value;
+                const type = document.getElementById('formInputType').value;
+                const detail = document.getElementById('formInputDetail').value;
+                const imageFile = document.getElementById('formImage').files[0];
+
+                let base64Image = null;
+                if (imageFile) {
+                    console.log("2. 正在處理圖片...");
+                    if (imageFile.size > 500 * 1024) { 
+                        alert("⚠️ 圖片太大了！請上傳小於 500KB 的照片。"); 
+                        submitBtn.disabled = false;
+                        submitBtn.innerText = "🚀 送出通報寫入資料庫";
+                        return; 
+                    }
+                    base64Image = await getBase64(imageFile);
+                }
+
+                let uid = "anonymous"; 
+                let uName = "訪客 (未登入)";
+                if (currentUser) { 
+                    uid = currentUser.uid; 
+                    uName = currentUser.displayName; 
+                }
+
+                console.log("3. 準備寫入 Firebase...", { loc, type, uid });
+
                 // 寫入資料庫
-                await addDoc(collection(db, "reports"), {
-                    location: loc, type: type, detail: detail, image: base64Image,
-                    userId: uid, userName: uName, timestamp: serverTimestamp()
+                const docRef = await addDoc(collection(db, "reports"), {
+                    location: loc, 
+                    type: type, 
+                    detail: detail, 
+                    image: base64Image,
+                    userId: uid, 
+                    userName: uName, 
+                    timestamp: serverTimestamp()
                 });
+
+                console.log("4. 寫入成功！文件 ID: ", docRef.id);
 
                 // 更新畫面分數
                 let currentScore = parseInt(localStorage.getItem('ecoPoints') || '0') + 50;
                 localStorage.setItem('ecoPoints', currentScore);
                 document.getElementById('score-val').innerText = currentScore;
 
-                alert(`🎉 通報成功！資料已寫入 Firestore。\n通報身分：${uName}\n🎁 獲得 50 點環保積分！`);
-                event.target.reset();
+                alert(`🎉 通報成功！\n\n資料已確實寫入 Firebase！\n(資料庫代碼: ${docRef.id})\n🎁 獲得 50 點環保積分！`);
+                event.target.reset(); // 清空表單
+
             } catch (e) {
-                console.error("寫入資料庫失敗: ", e);
-                alert("❌ 通報失敗，請確認已在 Firebase Rules 開啟 allow create: if true 寫入權限。");
+                console.error("❌ 寫入資料庫失敗: ", e);
+                alert("❌ 發生錯誤，通報失敗！\n錯誤訊息：" + e.message);
+            } finally {
+                // 不論成功或失敗，最後都把按鈕恢復原狀
+                submitBtn.disabled = false;
+                submitBtn.innerText = "🚀 送出通報寫入資料庫";
             }
         };
-
-        // 頁面載入時讀取積分
-        document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('score-val').innerText = localStorage.getItem('ecoPoints') || '0';
-        });
     </script>
 </body>
 </html>
