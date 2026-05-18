@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>台灣水資源監測平台 | Taiwan Water Monitor</title>
+    <title>湛藍守護：台灣水資源監測平台</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -15,14 +15,14 @@
         
         nav { background-color: var(--deep-blue); padding: 15px 30px; position: fixed; width: 100%; top: 0; z-index: 2000; display: flex; justify-content: space-between; align-items: center; box-sizing: border-box; }
         nav .logo { color: var(--white); font-size: 20px; font-weight: bold; }
-        nav .nav-links { display: flex; align-items: center; }
+        nav .nav-links { display: flex; align-items: center; flex-wrap: wrap; }
         nav a { color: var(--white); text-decoration: none; margin: 0 15px; font-weight: bold; transition: color 0.3s; }
         nav a:hover { color: var(--coral-orange); }
         
         .view-btn { background: rgba(255,255,255,0.12); color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 5px; padding: 8px 14px; margin-left: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
         .view-btn.active, .view-btn:hover { background: var(--coral-orange); transform: translateY(-1px); }
 
-        /* --- 新增：Firebase 登入按鈕樣式 --- */
+        /* Firebase 登入與會員樣式 */
         .auth-container { display: flex; align-items: center; gap: 10px; margin-left: 15px; }
         .user-profile { display: none; align-items: center; gap: 8px; color: white; font-weight: bold; font-size: 0.9rem;}
         .user-profile img { width: 28px; height: 28px; border-radius: 50%; border: 2px solid white; }
@@ -69,10 +69,9 @@
         .form-group label { display: block; font-weight: bold; margin-bottom: 5px; color: var(--deep-blue); }
         .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
         
-        .radar-ping { position: absolute !important; width: 22px !important; height: 22px !important; background: transparent; border: 0; }
-        .radar-core { position: absolute; left: 50%; top: 50%; width: 16px; height: 16px; border-radius: 50%; border: 3px solid white; transform: translate(-50%, -50%); box-sizing: border-box; }
-        .radar-pulse { position: absolute; left: 50%; top: 50%; width: 16px; height: 16px; border-radius: 50%; border: 2px solid currentColor; transform: translate(-50%, -50%); box-sizing: border-box; animation: pulse 2s infinite ease-out; pointer-events: none; }
-        @keyframes pulse { 0% { transform: translate(-50%, -50%) scale(1); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(4); opacity: 0; } }
+        .radar-ping { border-radius: 50%; position: relative; }
+        .radar-ping::after { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 50%; animation: pulse 2s infinite ease-out; border: 2px solid inherit; }
+        @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(4); opacity: 0; } }
         
         .custom-popup .leaflet-popup-content-wrapper { border-radius: 12px; }
         .custom-popup .leaflet-popup-content { overflow-x: hidden !important; } 
@@ -87,13 +86,10 @@
         .popup-row { margin-bottom: 8px; font-size: 0.95rem; }
         .popup-label { color: #5bc0de; font-weight: bold; display: inline-block; width: 85px; }
         .popup-value { color: #333; }
-        .river-popup-divider { border: 0; border-top: 2px solid var(--coral-orange); margin: 10px 0 14px; }
-        .river-popup-card { border-radius: 6px; padding: 14px 16px; margin-bottom: 12px; }
-        .river-popup-data { background: #f0efff; border-left: 4px solid #5c63ff; }
-        .river-popup-geo { background: #fff0f0; border-left: 4px solid #ff4d4d; }
         
         footer { background: var(--deep-blue); color: white; padding: 30px; text-align: center; }
 
+        /* 智慧定位與警示浮窗 */
         .locate-btn { position: absolute; bottom: 25px; right: 20px; z-index: 1000; background: white; color: var(--deep-blue); border: 2px solid rgba(0,0,0,0.2); border-radius: 8px; padding: 10px 15px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); font-weight: bold; transition: 0.3s; }
         .locate-btn:hover { background: #f0f4f8; transform: scale(1.05); }
         .smart-toast { position: fixed; top: -150px; left: 50%; transform: translateX(-50%); background: white; padding: 20px 25px; border-radius: 12px; box-shadow: 0 15px 35px rgba(0,0,0,0.25); z-index: 9999; text-align: center; min-width: 300px; border-top: 5px solid var(--coral-orange); transition: top 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55), opacity 0.5s ease; opacity: 0; pointer-events: none; }
@@ -101,7 +97,7 @@
 </head>
 <body>
     <nav>
-        <div class="logo" data-i18n="logo">💧 台灣水資源監測</div>
+        <div class="logo" data-i18n="logo">🌊 湛藍守護：台灣水資源</div>
         <div class="nav-links">
             <a href="#home" data-i18n="navHome">首頁</a>
             <a href="#map-section" data-i18n="navMap">即時監測</a>
@@ -122,7 +118,7 @@
     </nav>
 
     <header class="hero" id="home">
-        <h1 data-i18n="heroTitle">台灣水資源與污染監測</h1>
+        <h1 data-i18n="heroTitle">湛藍守護：台灣水資源與污染監測</h1>
         <p data-i18n="heroDesc">即時監測全國重要河川與水庫，結合全民力量守護環境</p>
         <a href="#map-section" class="cta-btn" data-i18n="heroBtn">啟動衛星監測</a>
     </header>
@@ -163,9 +159,16 @@
     <section id="report-form-section">
         <h2 data-i18n="formTitle">全民通報網：發現異常？</h2>
         <p style="margin-bottom: 30px;" data-i18n="formDesc">上傳您發現的水域異常狀況，協助政府建立更完善的監測網！</p>
-        <div id="user-score-display" style="background:#FFF3CD; color:#856404; padding:10px; border-radius:8px; display:inline-block; margin-bottom:15px; font-weight:bold;">
-            🏆 目前累積環保積分 / Points：<span id="score-val">0</span>
+        
+        <div id="user-score-display" style="background:#FFF3CD; color:#856404; padding:15px 25px; border-radius:12px; display:inline-block; margin-bottom:20px; font-weight:bold; border: 2px solid #ffeeba;">
+            <div style="font-size: 1.2rem; margin-bottom: 8px;">
+                🏆 目前累積積分 / Points：<span id="score-val" style="color: var(--danger-red); font-size: 1.4rem;">0</span>
+            </div>
+            <div style="font-size: 1rem; color: var(--deep-blue);">
+                🛡️ 當前守護者稱號：<span id="badge-val" style="background: var(--safe-green); color: white; padding: 4px 12px; border-radius: 15px; margin-left: 5px;">🌱 見習巡守員</span>
+            </div>
         </div>
+
         <div class="form-container">
             <form onsubmit="window.submitReport(event)">
                 <div class="form-group">
@@ -209,7 +212,7 @@
     </div>
 
     <footer>
-        <p>Group 27 Final Project - Taiwan Water Monitoring System</p>
+        <p>Group 27 Final Project - 湛藍守護：台灣水資源雙效監測系統</p>
         <p style="font-size: 0.8rem; opacity: 0.7; margin-top: 10px;" data-i18n="footerSource">資料來源：政府資料開放平台 | 每30秒更新一次</p>
     </footer>
 
@@ -219,10 +222,10 @@
         let currentLang = 'zh';
         const i18n = {
             zh: {
-                logo: "💧 台灣水資源監測", navHome: "首頁", navMap: "即時監測", navReport: "我要通報", langBtn: "🌐 English", navRiverBtn: "河川污染", navResBtn: "水庫水質",
-                heroTitle: "台灣水資源與污染監測", heroDesc: "即時監測全國重要河川與水庫，結合全民力量守護環境", heroBtn: "啟動衛星監測",
+                logo: "🌊 湛藍守護：台灣水資源", navHome: "首頁", navMap: "即時監測", navReport: "我要通報", langBtn: "🌐 English", navRiverBtn: "河川污染", navResBtn: "水庫水質",
+                heroTitle: "湛藍守護：台灣水資源與污染監測", heroDesc: "即時監測全國重要河川與水庫，結合全民力量守護環境", heroBtn: "啟動衛星監測",
                 mapTitleRiver: "全國河川污染監測圖", mapTitleRes: "全國水庫水質監測圖", mapLegendRiver: "河川污染等級", mapLegendRes: "水庫水質等級",
-                legDangerRiver: "重度污染 (BOD>6 mg/L)", legWarningRiver: "中度污染 (BOD 3-6 mg/L)", legSafeRiver: "正常河川 (BOD<3 mg/L)",
+                legDangerRiver: "重度污染 (BOD>5 mg/L)", legWarningRiver: "中度污染 (BOD 3-5 mg/L)", legSafeRiver: "正常河川 (BOD<3 mg/L)",
                 legDangerRes: "水質不佳 (TOC高/濁度高)", legWarningRes: "水質待觀察 (pH異常)", legSafeRes: "水質良好 (TOC低/pH穩定)",
                 dataCenterRiver: "全部河川監測清單", dataCenterRes: "全部水庫水質清單", searchPlaceholder: "🔍 搜尋名稱或縣市...",
                 filterAll: "顯示所有等級", filterDanger: "🔴 重度污染 / 狀態不佳", filterWarning: "🟡 中度污染 / 待觀察", filterSafe: "🟢 正常安全 / 狀態良好", exportBtn: "📥 匯出 CSV 報表",
@@ -231,7 +234,7 @@
                 formTitle: "全民通報網：發現異常？", formDesc: "上傳您發現的水域異常狀況，協助政府建立更完善的監測網！",
                 formLoc: "發現地點 (縣市/河川/水庫)", formLocPlace: "例如：新北市 景美溪", formType: "污染類型", formOpt1: "請選擇...", formOpt2: "不明廢水排放 (變色/異味)", formOpt3: "大量垃圾堆積", formOpt4: "魚群集體死亡",formOpt5: "其他",
                 formDetail: "現場狀況描述", formDetailPlace: "請簡單描述您看到的狀況...", formSubmit: "🚀 匿名 / 登入 送出通報",
-                modalTitleSuffix: " - 歷史監測圖表", modalDesc: "過去六個月數值變化圖", footerSource: "資料來源：政府資料開放平台  | 每30秒更新一次",
+                modalTitleSuffix: " - 歷史監測圖表", modalDesc: "過去六個月數值變化圖", footerSource: "資料來源：政府資料開放平台 | 每30秒更新一次",
                 statusHigh: "高污染 / 不佳", statusMed: "中污染 / 待觀察", statusLow: "正常 / 良好", viewChart: "📊 趨勢圖",
                 popupDataRiv: "污染數據：", popupGeo: "地理資訊：", popFlow: "總流量", popBod: "BOD", popSS: "懸浮物", popMetal: "重金屬", popOther: "其他污染物",
                 popLng: "經度", popLat: "緯度", popCounty: "縣市", popTown: "鄉鎮", popStation: "測站", unit: "千噸",
@@ -239,10 +242,10 @@
                 nearestAlert: "📍 鄰近水域智慧警示", nearestIs: "距離您最近的是", distance: "直線距離約", currStatus: "目前狀態："
             },
             en: {
-                logo: "💧 Taiwan Water Monitor", navHome: "Home", navMap: "Live Map", navReport: "Report", langBtn: "🌐 中文", navRiverBtn: "River Quality", navResBtn: "Reservoir Quality",
+                logo: "🌊 Taiwan Water Monitor", navHome: "Home", navMap: "Live Map", navReport: "Report", langBtn: "🌐 中文", navRiverBtn: "River Quality", navResBtn: "Reservoir Quality",
                 heroTitle: "Taiwan Water & Pollution Monitor", heroDesc: "Real-time monitoring of rivers and reservoirs, protecting our environment together.", heroBtn: "Start Radar",
                 mapTitleRiver: "National River Pollution Map", mapTitleRes: "National Reservoir Quality Map", mapLegendRiver: "River Pollution Levels", mapLegendRes: "Reservoir Quality Levels",
-                legDangerRiver: "Severe (BOD>6 mg/L)", legWarningRiver: "Moderate (BOD 3-6 mg/L)", legSafeRiver: "Normal (BOD<3 mg/L)",
+                legDangerRiver: "Severe (BOD>5 mg/L)", legWarningRiver: "Moderate (BOD 3-5 mg/L)", legSafeRiver: "Normal (BOD<3 mg/L)",
                 legDangerRes: "Poor (High TOC/Turbidity)", legWarningRes: "Monitor (Abnormal pH)", legSafeRes: "Good (Low TOC/Stable pH)",
                 dataCenterRiver: "River Data Center", dataCenterRes: "Reservoir Data Center", searchPlaceholder: "🔍 Search name or city...",
                 filterAll: "All Levels", filterDanger: "🔴 Severe / Poor", filterWarning: "🟡 Moderate / Monitor", filterSafe: "🟢 Normal / Good", exportBtn: "📥 Export CSV",
@@ -274,6 +277,9 @@
             updateViewLabels(); renderTable(globalReportData);
             const btn = document.querySelector('.locate-btn');
             if(btn && btn.innerHTML.includes('📍')) { btn.innerHTML = i18n[currentLang].smartLocate; }
+            
+            // 觸發重新渲染稱號語言
+            if (window.refreshBadgeDisplay) window.refreshBadgeDisplay();
         }
 
         const taiwanBounds = [[18, 110], [30, 125]];
@@ -281,14 +287,6 @@
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
         var markersLayer = L.layerGroup().addTo(map);
         var statusColors = { danger: "#ff4d4d", warning: "#ffcc00", safe: "#33cc33" };
-        var reservoirStatusColors = statusColors;
-        map.on('zoomend moveend', () => {
-            markersLayer.eachLayer(layer => {
-                if (layer.options && layer.options.fixedLatLng) {
-                    layer.setLatLng(layer.options.fixedLatLng);
-                }
-            });
-        });
 
         let globalReportData = [];
         let trendChartInstance = null;
@@ -329,24 +327,10 @@
             } catch (error) { console.error(error); document.getElementById('sync-time').innerText = currentLang === 'zh' ? "❌ 更新失敗" : "❌ Sync Failed"; }
         }
 
-        async function fetchOpenDataRecords(resourceId, apiKey, pageSize = 1000) {
-            let offset = 0;
-            let records = [];
-            while (true) {
-                const response = await fetch(`https://data.moenv.gov.tw/api/v2/${resourceId}?format=json&limit=${pageSize}&offset=${offset}&api_key=${apiKey}`);
-                const data = await response.json();
-                const pageItems = Array.isArray(data) ? data : (data.records || data.result || []);
-                records = records.concat(pageItems);
-                if (pageItems.length < pageSize) break;
-                offset += pageSize;
-            }
-            return records;
-        }
-
         async function loadRiverData() {
             const apiKey = "3e2396a4-442f-40ed-81d8-4f0dfd103f00";
-            const data1 = await fetchOpenDataRecords('STAT_P_123', apiKey);
-            const data2 = await fetchOpenDataRecords('GISEPA_P_28', apiKey);
+            const data1 = await (await fetch(`https://data.moenv.gov.tw/api/v2/STAT_P_123?format=json&limit=100&api_key=${apiKey}`)).json();
+            const data2 = await (await fetch(`https://data.moenv.gov.tw/api/v2/GISEPA_P_28?format=json&limit=100&api_key=${apiKey}`)).json();
             globalReportData = [];
             const latestData1 = data1.filter(item => item.item1 === "113年");
             const latestData2 = data2.filter(item => !item.item1 || item.item1 === "113年");
@@ -359,18 +343,13 @@
             latestData1.forEach(item => {
                 const riverName = item.item2;
                 const val1 = parseFloat(item.value1) || 0, val2 = parseFloat(item.value2) || 0, val3 = parseFloat(item.value3) || 0, val4 = parseFloat(item.value4) || 0, val5 = parseFloat(item.value5) || 0;
-                const bod = val3; const level = bod > 6 ? "danger" : bod > 3 ? "warning" : "safe";
+                const bod = val3; const level = bod > 5 ? "danger" : bod > 3 ? "warning" : "safe";
                 const location = riverLocationMap[riverName];
 
                 if(location) {
                     globalReportData.push({ isReservoir: false, name: riverName, level: level, bod: bod, county: location.county, town: location.town, station: location.stationName, lat: location.lat, lng: location.lng });
                     const color = statusColors[level];
-                    const icon = L.divIcon({
-                        className: 'radar-ping',
-                        html: `<div class="radar-core" style="background:${color};"></div><div class="radar-pulse" style="color:${color};"></div>`,
-                        iconSize: [22, 22],
-                        iconAnchor: [11, 11]
-                    });
+                    const icon = L.divIcon({ className: 'radar-ping', html: `<div style="background:${color}; width:12px; height:12px; border-radius:50%; border:2px solid white;"><div style="width:100%; height:100%; border-radius:50%; border:2px solid ${color}; animation:pulse 2s infinite ease-out;"></div></div>`, iconSize: [12, 12], iconAnchor: [6, 6] });
                     const levelBadge = level === 'danger' ? `⚠️ ${t.statusHigh}` : (level === 'warning' ? `🟡 ${t.statusMed}` : `✅ ${t.statusLow}`);
                     const badgeColor = level === 'warning' ? '#000' : '#fff';
                     const popupContent = `
@@ -378,25 +357,13 @@
                             <div class="popup-title">${riverName}</div>
                             <div class="popup-subtitle">📍 ${location.county} ${location.town} | ${t.popStation}：${location.stationName}</div>
                             <div class="popup-badge" style="background-color: ${color}; color: ${badgeColor};">${levelBadge}</div>
-                            <hr class="river-popup-divider">
-                            <div class="river-popup-card river-popup-data">
+                            <div class="popup-section popup-data-blue">
                                 <div class="popup-section-title">📊 ${t.popupDataRiv}</div>
-                                <div class="popup-row"><span class="popup-label">${t.popFlow}：</span> <span class="popup-value">${val1.toFixed(2)} ${t.unit}</span></div>
-                                <div class="popup-row"><span class="popup-label">${t.popBod}：</span> <span class="popup-value">${val3.toFixed(2)} ${t.unit}</span></div>
-                                <div class="popup-row"><span class="popup-label">${t.popSS}：</span> <span class="popup-value">${val2.toFixed(2)} ${t.unit}</span></div>
-                                <div class="popup-row"><span class="popup-label">${t.popMetal}：</span> <span class="popup-value">${val4.toFixed(2)} ${t.unit}</span></div>
-                                <div class="popup-row"><span class="popup-label">${t.popOther}：</span> <span class="popup-value">${val5.toFixed(2)} ${t.unit}</span></div>
-                            </div>
-                            <div class="river-popup-card river-popup-geo">
-                                <div class="popup-section-title">📍 ${t.popupGeo}</div>
-                                <div class="popup-row"><span class="popup-label">經度：</span> <span class="popup-value">${location.lng.toFixed(6)}</span></div>
-                                <div class="popup-row"><span class="popup-label">緯度：</span> <span class="popup-value">${location.lat.toFixed(6)}</span></div>
-                                <div class="popup-row"><span class="popup-label">縣市：</span> <span class="popup-value">${location.county}</span></div>
-                                <div class="popup-row"><span class="popup-label">鄉鎮：</span> <span class="popup-value">${location.town}</span></div>
-                                <div class="popup-row"><span class="popup-label">測站：</span> <span class="popup-value">${location.stationName}</span></div>
+                                <div class="popup-row"><span class="popup-label">${t.popFlow}：</span> <span class="popup-value">${val1} ${t.unit}</span></div>
+                                <div class="popup-row"><span class="popup-label">${t.popBod}：</span> <span class="popup-value">${val2.toFixed(2)} mg/L</span></div>
                             </div>
                         </div>`;
-                    L.marker([location.lat, location.lng], { icon: icon }).addTo(markersLayer).bindPopup(popupContent, { minWidth: 360, maxWidth: 430, className: 'custom-popup', maxHeight: 560, autoPanPadding: [30, 30] });
+                    L.marker([location.lat, location.lng], { icon: icon }).addTo(markersLayer).bindPopup(popupContent, { minWidth: 260, maxWidth: 320, className: 'custom-popup', maxHeight: 380, autoPanPadding: [30, 30] });
                 }
             });
             renderTable(globalReportData);
@@ -408,159 +375,65 @@
             if (!text || text === '-' || text.toUpperCase() === 'NA' || text.toUpperCase() === 'N/A') return NaN;
             return parseFloat(text.replace(/[<>]/g, '').replace(/,/g, ''));
         }
-        function isValidTaiwanLatLng(lat, lng) {
-            return Number.isFinite(lat) && Number.isFinite(lng) && lat >= 20 && lat <= 26 && lng >= 118 && lng <= 124;
-        }
-        function parseReservoirSampleTime(rawValue) {
-            if (!rawValue) return 0;
-            const text = rawValue.toString().trim();
-            if (/^\d{8}$/.test(text)) {
-                const year = Number(text.slice(0, 4));
-                const month = Number(text.slice(4, 6)) - 1;
-                const day = Number(text.slice(6, 8));
-                return new Date(year, month, day).getTime();
-            }
-            const time = new Date(text.replace(' ', 'T')).getTime();
-            return Number.isFinite(time) ? time : 0;
-        }
-        function normalizeReservoirKey(name) {
-            if (!name) return '';
-            return name.toString().trim().toLowerCase();
-        }
         function toReservoirField(key) {
-            if (!key) return '';
-            const normalized = normalizeReservoirKey(key);
-            if (['ph', 'ph值', '酸鹼值', 'ph 值'].includes(normalized)) return 'ph';
-            if (['總有機碳', 'toc', 'total organic carbon', 'total-organic-carbon'].includes(normalized)) return 'toc';
-            if (['氨氮', 'nh3-n', 'nh3n'].includes(normalized)) return 'nh3';
-            if (['總磷', 'tp', 'total-phosphate', 'total phosphate'].includes(normalized)) return 'tp';
-            if (['葉綠素a', 'chl-a', 'chlorophyl-a', 'chlorophyll-a'].includes(normalized)) return 'chla';
-            if (['溶氧飽和度', 'dos', 'dissolved oxygen saturation'].includes(normalized)) return 'doSat';
+            const normalized = key ? key.toString().trim().toLowerCase() : '';
+            if (['ph', 'ph值', '酸鹼值', 'ph 值', 'pH'].includes(normalized)) return 'ph';
+            if (['總有機碳', 'toc'].includes(normalized)) return 'toc';
+            if (['氨氮', 'nh3-n', 'nh3n', '氨氮'].includes(normalized)) return 'nh3';
             return '';
         }
-        function averageReservoirField(stations, field) {
-            const values = stations
-                .map(station => station.data[field])
-                .filter(value => Number.isFinite(value));
-            return values.length > 0 ? values.reduce((sum, value) => sum + value, 0) / values.length : null;
-        }
-        function formatReservoirValue(value, digits, unit = '') {
-            return Number.isFinite(value) ? `${value.toFixed(digits)}${unit}` : 'N/A';
-        }
-        function renderReservoirStationDetails(stations) {
-            if (!stations.length) return '<div style="color:#666; font-size:0.9rem;">暫無測站資料</div>';
-            return stations.map(station => {
-                const rows = [
-                    ['pH', formatReservoirValue(station.data.ph, 1)],
-                    ['TOC', formatReservoirValue(station.data.toc, 2, ' mg/L')],
-                    ['氨氮', formatReservoirValue(station.data.nh3, 2, ' mg/L')],
-                    ['總磷', formatReservoirValue(station.data.tp, 2, ' mg/L')],
-                    ['葉綠素a', formatReservoirValue(station.data.chla, 1, ' μg/L')],
-                    ['溶氧飽和度', formatReservoirValue(station.data.doSat, 1, '%')]
-                ].filter(row => row[1] !== 'N/A');
-                const detailRows = rows.length
-                    ? rows.map(row => `<div>${row[0]}: ${row[1]}</div>`).join('')
-                    : '<div style="color:#666;">此測站暫無有效數值</div>';
-                return `
-                    <div style="margin: 14px 0 18px;">
-                        <div style="font-weight:bold; color:#002244;">${station.siteName || '未命名測站'} (${station.id})</div>
-                        <div style="line-height:1.35; color:#111;">${detailRows}</div>
-                    </div>
-                `;
-            }).join('');
-        }
-        const reservoirCenterLocations = {
-            "仁義潭水庫": { lat: 23.4646389, lng: 120.5052222 },
-            "日月潭水庫": { lat: 23.8503080, lng: 120.9099620 },
-            "永和山水庫": { lat: 24.6531430, lng: 120.9180520 },
-            "白河水庫": { lat: 23.3620570, lng: 120.4785310 },
-            "石門水庫": { lat: 24.8107760, lng: 121.2663620 },
-            "牡丹水庫": { lat: 22.1471050, lng: 120.7823180 },
-            "明德水庫": { lat: 24.5804260, lng: 120.8847610 },
-            "阿公店水庫": { lat: 22.8200360, lng: 120.3486950 },
-            "南化水庫": { lat: 23.1263540, lng: 120.5641780 },
-            "烏山頭水庫": { lat: 23.1917289, lng: 120.3872439 },
-            "曾文水庫": { lat: 23.3124950, lng: 120.5985270 },
-            "湖山水庫": { lat: 23.6840833, lng: 120.6255556 },
-            "新山水庫": { lat: 25.1286690, lng: 121.7094750 },
-            "鳳山水庫": { lat: 22.5351450, lng: 120.3896219 },
-            "德基水庫": { lat: 24.2700840, lng: 121.2476840 },
-            "澄清湖水庫": { lat: 22.6639722, lng: 120.3505000 },
-            "鯉魚潭水庫": { lat: 24.3415630, lng: 120.7847930 },
-            "鏡面水庫": { lat: 23.0580740, lng: 120.4884629 },
-            "霧社水庫": { lat: 24.0012880, lng: 121.1364720 },
-            "寶山水庫": { lat: 24.7483520, lng: 121.0424370 },
-            "蘭潭水庫": { lat: 23.4730300, lng: 120.4792320 }
-        };
+        const manualReservoirLocations = { "石門水庫": { lat: 24.7900, lng: 121.2000 }, "翡翠水庫": { lat: 24.9600, lng: 121.5100 } };
 
         async function loadReservoirData() {
             const apiKey = "3e2396a4-442f-40ed-81d8-4f0dfd103f00";
-            const items = await fetchOpenDataRecords('WQX_P_117', apiKey);
+            let offset = 0; let items = [];
+            while (true) {
+                const response = await fetch(`https://data.moenv.gov.tw/api/v2/WQX_P_117?format=json&api_key=${apiKey}&limit=1000&offset=${offset}`);
+                const data = await response.json();
+                const pageItems = Array.isArray(data) ? data : (data.records || data.result || []);
+                items = items.concat(pageItems);
+                if (pageItems.length < 1000) break;
+                offset += 1000;
+            }
             const dams = {};
             items.forEach(item => {
                 const damName = (item.damname || item.reservoir_name || item.name || '未知水庫').toString().trim();
                 const siteId = (item.siteid || item.stationid || 'unknown').toString().trim();
-                const lat = parseNumericValue(item.twd97lat || item.twd97_lat || item.lat);
-                const lng = parseNumericValue(item.twd97lon || item.twd97_lon || item.lon);
-                const hasValidCoord = isValidTaiwanLatLng(lat, lng);
+                let lat = parseNumericValue(item.twd97lat || item.twd97_lat || item.lat);
+                let lng = parseNumericValue(item.twd97lon || item.twd97_lon || item.lon);
+                if (!isNaN(lat) && (lat < 20 || lat > 26)) lat = NaN; if (!isNaN(lng) && (lng < 118 || lng > 124)) lng = NaN;
 
                 if (!dams[damName]) dams[damName] = { name: damName, stations: {}, coords: [] };
-                if (!dams[damName].stations[siteId]) dams[damName].stations[siteId] = { id: siteId, siteName: (item.sitename || item.site_name || item.station_name || damName).toString().trim(), lat: hasValidCoord ? lat : 0, lng: hasValidCoord ? lng : 0, data: {}, sampleTimes: {} };
-                const station = dams[damName].stations[siteId];
-                if (hasValidCoord && !isValidTaiwanLatLng(station.lat, station.lng)) {
-                    station.lat = lat;
-                    station.lng = lng;
-                }
+                if (!dams[damName].stations[siteId]) dams[damName].stations[siteId] = { id: siteId, lat: !isNaN(lat) ? lat : 0, lng: !isNaN(lng) ? lng : 0, data: {} };
+                if (!isNaN(lat) && !isNaN(lng)) dams[damName].coords.push({ lat, lng });
 
-                const field = toReservoirField(item.itemname || item.itemengabbreviation || item.itemengname || item.itemnamecn);
-                const value = parseNumericValue(item.itemvalue || item.value);
-                const sampleTime = parseReservoirSampleTime(item.sampledate);
-                if (field && Number.isFinite(value) && (!station.sampleTimes[field] || sampleTime >= station.sampleTimes[field])) {
-                    station.data[field] = value;
-                    station.sampleTimes[field] = sampleTime;
-                }
+                const field = toReservoirField(item.itemname || item.itemengabbreviation);
+                if (field) dams[damName].stations[siteId].data[field] = parseNumericValue(item.itemvalue || item.value);
             });
 
             const t = i18n[currentLang];
-            const reservoirList = Object.values(dams).map(dam => {
-                const stationList = Object.values(dam.stations);
-                const fixedCenter = reservoirCenterLocations[dam.name];
-                const coords = stationList
-                    .filter(station => isValidTaiwanLatLng(station.lat, station.lng))
-                    .map(station => ({ lat: station.lat, lng: station.lng }));
-                const avgLat = fixedCenter ? fixedCenter.lat : (coords.length > 0 ? coords.reduce((sum, c) => sum + c.lat, 0) / coords.length : 0);
-                const avgLng = fixedCenter ? fixedCenter.lng : (coords.length > 0 ? coords.reduce((sum, c) => sum + c.lng, 0) / coords.length : 0);
-                const avgPh = averageReservoirField(stationList, 'ph');
-                const avgToc = averageReservoirField(stationList, 'toc');
-                const avgNh3 = averageReservoirField(stationList, 'nh3');
-                const avgTp = averageReservoirField(stationList, 'tp');
-                const avgChla = averageReservoirField(stationList, 'chla');
-                const avgDoSat = averageReservoirField(stationList, 'doSat');
+            globalReportData = Object.values(dams).map(dam => {
+                const avgLat = dam.coords.length > 0 ? dam.coords.reduce((sum, c) => sum + c.lat, 0) / dam.coords.length : 0;
+                const avgLng = dam.coords.length > 0 ? dam.coords.reduce((sum, c) => sum + c.lng, 0) / dam.coords.length : 0;
+                const stationList = Object.values(dam.stations).filter(s => s.lat !== 0 && s.lng !== 0);
+                const avgPh = stationList.length > 0 ? stationList.reduce((sum, s) => sum + (s.data['ph'] || 0), 0) / stationList.length : 0;
+                const avgToc = stationList.length > 0 ? stationList.reduce((sum, s) => sum + (s.data['toc'] || 0), 0) / stationList.length : 0;
+                const avgNh3 = stationList.length > 0 ? stationList.reduce((sum, s) => sum + (s.data['nh3'] || 0), 0) / stationList.length : 0;
                 const hasQualityData = stationList.some(s => Object.keys(s.data).length > 0);
                 
                 let level = 'safe';
                 if (!hasQualityData) level = 'safe';
-                else if (Number.isFinite(avgPh) && (avgPh < 6.8 || avgPh > 8.2)) level = 'danger';
-                else if ((Number.isFinite(avgToc) && avgToc > 3) || (Number.isFinite(avgNh3) && avgNh3 > 0.3) || (Number.isFinite(avgTp) && avgTp > 0.1) || (Number.isFinite(avgChla) && avgChla > 10)) level = 'danger';
-                else if ((Number.isFinite(avgToc) && avgToc > 1.5) || (Number.isFinite(avgNh3) && avgNh3 > 0.1) || (Number.isFinite(avgTp) && avgTp > 0.05) || (Number.isFinite(avgChla) && avgChla > 5)) level = 'warning';
+                else if (avgPh && (avgPh < 6.8 || avgPh > 8.2)) level = 'danger';
+                else if (avgToc > 3 || avgNh3 > 0.3) level = 'danger';
+                else if (avgToc > 1.5 || avgNh3 > 0.1) level = 'warning';
                 
                 const status = !hasQualityData ? (currentLang === 'zh'?'無即時資料':'No Data') : (level === 'danger' ? t.statusHigh : level === 'warning' ? t.statusMed : t.statusLow);
-                return { isReservoir: true, name: dam.name, lat: avgLat, lng: avgLng, stationCount: stationList.length, stations: stationList, ph: avgPh, toc: avgToc, nh3: avgNh3, tp: avgTp, chla: avgChla, doSat: avgDoSat, level, status, hasLocation: (avgLat !== 0 && avgLng !== 0) };
-            });
-            globalReportData = reservoirList.filter(item => item.hasLocation);
-            console.info(`WQX_P_117 水庫資料：共 ${reservoirList.length} 座，已標示 ${globalReportData.length} 座，缺座標 ${reservoirList.length - globalReportData.length} 座。`);
+                return { isReservoir: true, name: dam.name, lat: avgLat, lng: avgLng, stationCount: stationList.length, stations: stationList, ph: avgPh, toc: avgToc, nh3: avgNh3, level, status, hasLocation: (avgLat !== 0 && avgLng !== 0) };
+            }).filter(item => item.hasLocation);
 
             globalReportData.forEach(item => {
-                const color = reservoirStatusColors[item.level];
-                const stationDetails = renderReservoirStationDetails(item.stations);
-                const icon = L.divIcon({
-                    className: 'radar-ping',
-                    html: `<div class="radar-core" style="background:${color};"></div><div class="radar-pulse" style="color:${color};"></div>`,
-                    iconSize: [22, 22],
-                    iconAnchor: [11, 11]
-                });
-                const fixedLatLng = L.latLng(item.lat, item.lng);
-                const marker = L.marker(fixedLatLng, { icon: icon, riseOnHover: true, fixedLatLng });
+                const color = statusColors[item.level];
+                const marker = L.circleMarker([item.lat, item.lng], { radius: 8, fillColor: color, color: '#fff', weight: 2, opacity: 1, fillOpacity: 0.8 });
                 const badgeColor = item.level === 'warning' ? '#000' : '#fff';
                 const levelBadge = item.level === 'danger' ? `⚠️ ${t.statusHigh}` : (item.level === 'warning' ? `🟡 ${t.statusMed}` : `✅ ${t.statusLow}`);
                 
@@ -569,20 +442,11 @@
                         <div class="popup-title">${item.name}</div>
                         <div class="popup-badge" style="background-color: ${color}; color: ${badgeColor};">${levelBadge}</div>
                         <div class="popup-section popup-data-blue">
-                            <div class="popup-section-title">平均水質指標</div>
-                            <div class="popup-row"><span class="popup-label">pH：</span> <span class="popup-value">${formatReservoirValue(item.ph, 1)}</span></div>
-                            <div class="popup-row"><span class="popup-label">TOC：</span> <span class="popup-value">${formatReservoirValue(item.toc, 2, ' mg/L')}</span></div>
-                            <div class="popup-row"><span class="popup-label">氨氮：</span> <span class="popup-value">${formatReservoirValue(item.nh3, 2, ' mg/L')}</span></div>
-                            <div class="popup-row"><span class="popup-label">總磷：</span> <span class="popup-value">${formatReservoirValue(item.tp, 2, ' mg/L')}</span></div>
-                            <div class="popup-row"><span class="popup-label">葉綠素a：</span> <span class="popup-value">${formatReservoirValue(item.chla, 1, ' μg/L')}</span></div>
-                            <div class="popup-row"><span class="popup-label">溶氧飽和度：</span> <span class="popup-value">${formatReservoirValue(item.doSat, 1, '%')}</span></div>
-                        </div>
-                        <div style="border-top:1px solid #ddd; margin-top:12px; padding-top:12px;">
-                            <div style="font-weight:bold; color:#002244; margin-bottom:10px;">各測站詳細資料</div>
-                            ${stationDetails}
+                            <div class="popup-row"><span class="popup-label">pH：</span> <span class="popup-value">${item.ph ? item.ph.toFixed(1) : 'N/A'}</span></div>
+                            <div class="popup-row"><span class="popup-label">TOC：</span> <span class="popup-value">${item.toc ? item.toc.toFixed(2) : 'N/A'} mg/L</span></div>
                         </div>
                     </div>`;
-                marker.addTo(markersLayer).bindPopup(popupContent, { minWidth: 300, maxWidth: 360, className: 'custom-popup', maxHeight: 520, autoPanPadding: [30, 30] });
+                marker.addTo(markersLayer).bindPopup(popupContent, { minWidth: 260, maxWidth: 320, className: 'custom-popup', maxHeight: 380 });
             });
             renderTable(globalReportData);
         }
@@ -599,7 +463,7 @@
             } else {
                 tbody.innerHTML = data.map(row => {
                     const statusClass = row.level === 'danger' ? 'status-danger' : row.level === 'warning' ? 'status-warning' : 'status-safe';
-                    return `<tr><td><strong>${row.name}</strong></td><td><span class="status-dot ${statusClass}" style="background:${reservoirStatusColors[row.level]}"></span>${row.status}</td><td>${formatReservoirValue(row.ph, 1)}</td><td>${formatReservoirValue(row.toc, 2)}</td><td>${row.status}</td></tr>`;
+                    return `<tr><td><strong>${row.name}</strong></td><td><span class="status-dot ${statusClass}"></span>${row.status}</td><td>${row.ph ? row.ph.toFixed(1) : 'N/A'}</td><td>${row.toc ? row.toc.toFixed(2) : 'N/A'}</td><td>${row.status}</td></tr>`;
                 }).join('');
             }
         }
@@ -684,6 +548,43 @@
                 );
             }
         });
+
+        // 綁定全域稱號更新函式 (判斷是否登入)
+        window.updateBadgeDisplay = function(score, isLoggedIn = false) {
+            const scoreEl = document.getElementById('score-val');
+            const badgeEl = document.getElementById('badge-val');
+            const isEn = currentLang === 'en';
+
+            if (!isLoggedIn) {
+                scoreEl.innerText = isEn ? "0 (Login Required)" : "0 (需登入)";
+                badgeEl.innerText = isEn ? "🔒 Login to Unlock" : "🔒 登入解鎖稱號";
+                badgeEl.style.background = "#888"; badgeEl.style.color = "#fff";
+                return;
+            }
+
+            scoreEl.innerText = score;
+            if (score >= 300) {
+                badgeEl.innerText = isEn ? "👑 Guardian Ambassador" : "👑 湛藍守護大使 (最高榮譽)";
+                badgeEl.style.background = "#FFD700"; badgeEl.style.color = "#000";
+            } else if (score >= 150) {
+                badgeEl.innerText = isEn ? "🥇 Senior Analyst" : "🥇 高級水質分析師";
+                badgeEl.style.background = "#C0C0C0"; badgeEl.style.color = "#000";
+            } else if (score >= 50) {
+                badgeEl.innerText = isEn ? "🥈 Junior Ranger" : "🥈 初級河川巡守員";
+                badgeEl.style.background = "#40E0D0"; badgeEl.style.color = "#fff";
+            } else {
+                badgeEl.innerText = isEn ? "🌱 Trainee Ranger" : "🌱 見習巡守員";
+                badgeEl.style.background = "var(--safe-green)"; badgeEl.style.color = "#fff";
+            }
+        };
+
+        // 供 i18n 切換時重新渲染
+        window.refreshBadgeDisplay = function() {
+            const scoreText = document.getElementById('score-val').innerText;
+            const isLogged = !scoreText.includes('登入') && !scoreText.includes('Login');
+            const score = parseInt(scoreText) || 0;
+            window.updateBadgeDisplay(score, isLogged);
+        };
     </script>
 
     <script type="module">
@@ -691,7 +592,6 @@
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
-        // 1. Firebase 初始化
         const firebaseConfig = {
             apiKey: "AIzaSyCc42kGPkac8oM4u8JJoszFmu3AeSqcVjY",
             authDomain: "finalproject-50228.firebaseapp.com",
@@ -705,23 +605,29 @@
         const db = getFirestore(app);
         let currentUser = null;
 
-        // 2. 監聽登入狀態
         onAuthStateChanged(auth, (user) => {
             currentUser = user;
             const loginBtn = document.getElementById('login-btn');
             const userProfile = document.getElementById('user-profile');
+            
             if (user) {
                 loginBtn.style.display = 'none';
                 userProfile.style.display = 'flex';
                 document.getElementById('user-avatar').src = user.photoURL;
                 document.getElementById('user-name').innerText = user.displayName;
+                
+                // 讀取該用戶專屬的積分
+                let currentScore = parseInt(localStorage.getItem('ecoPoints_' + user.uid) || '0');
+                window.updateBadgeDisplay(currentScore, true);
             } else {
                 loginBtn.style.display = 'block';
                 userProfile.style.display = 'none';
+                
+                // 沒登入時鎖住稱號
+                window.updateBadgeDisplay(0, false);
             }
         });
 
-        // 3. 綁定 Google 登入功能到全域
         window.loginWithGoogle = async function() {
             const provider = new GoogleAuthProvider();
             try { await signInWithPopup(auth, provider); } 
@@ -730,7 +636,6 @@
 
         window.logout = function() { signOut(auth); };
 
-        // 4. Base64 轉換與 GPS 定位綁定
         function getBase64(file) {
            return new Promise((resolve, reject) => {
              const reader = new FileReader(); reader.readAsDataURL(file);
@@ -749,18 +654,14 @@
             }
         };
 
-        // 5. 提交表單寫入 Firestore
-        // 5. 提交表單寫入 Firestore (終極防護版)
         window.submitReport = async function(event) {
-            event.preventDefault(); // 防止網頁重新整理
+            event.preventDefault();
             
-            // 抓取送出按鈕，並鎖定防連點
             const submitBtn = event.target.querySelector('button[type="submit"]');
             submitBtn.disabled = true;
-            submitBtn.innerText = "⏳ 傳送中，請稍候...";
+            submitBtn.innerText = "⏳ 傳送中，請稍候... / Sending...";
 
             try {
-                console.log("1. 開始讀取表單資料...");
                 const loc = document.getElementById('formInputLoc').value;
                 const type = document.getElementById('formInputType').value;
                 const detail = document.getElementById('formInputDetail').value;
@@ -768,51 +669,37 @@
 
                 let base64Image = null;
                 if (imageFile) {
-                    console.log("2. 正在處理圖片...");
                     if (imageFile.size > 500 * 1024) { 
                         alert("⚠️ 圖片太大了！請上傳小於 500KB 的照片。"); 
-                        submitBtn.disabled = false;
-                        submitBtn.innerText = "🚀 送出通報寫入資料庫";
-                        return; 
+                        submitBtn.disabled = false; submitBtn.innerText = "🚀 送出通報寫入資料庫"; return; 
                     }
                     base64Image = await getBase64(imageFile);
                 }
 
-                let uid = "anonymous"; 
-                let uName = "訪客 (未登入)";
-                if (currentUser) { 
-                    uid = currentUser.uid; 
-                    uName = currentUser.displayName; 
-                }
+                let uid = "anonymous"; let uName = "訪客 (未登入)";
+                if (currentUser) { uid = currentUser.uid; uName = currentUser.displayName; }
 
-                console.log("3. 準備寫入 Firebase...", { loc, type, uid });
-
-                // 寫入資料庫
                 const docRef = await addDoc(collection(db, "reports"), {
-                    location: loc, 
-                    type: type, 
-                    detail: detail, 
-                    image: base64Image,
-                    userId: uid, 
-                    userName: uName, 
-                    timestamp: serverTimestamp()
+                    location: loc, type: type, detail: detail, image: base64Image,
+                    userId: uid, userName: uName, timestamp: serverTimestamp()
                 });
 
-                console.log("4. 寫入成功！文件 ID: ", docRef.id);
-
-                // 更新畫面分數
-                let currentScore = parseInt(localStorage.getItem('ecoPoints') || '0') + 50;
-                localStorage.setItem('ecoPoints', currentScore);
-                document.getElementById('score-val').innerText = currentScore;
-
-                alert(`🎉 通報成功！\n\n資料已確實寫入 Firebase！\n(資料庫代碼: ${docRef.id})\n🎁 獲得 50 點環保積分！`);
-                event.target.reset(); // 清空表單
-
+                if (currentUser) {
+                    // 如果有登入，更新該用戶專屬積分並升級稱號
+                    let currentScore = parseInt(localStorage.getItem('ecoPoints_' + currentUser.uid) || '0') + 50;
+                    localStorage.setItem('ecoPoints_' + currentUser.uid, currentScore);
+                    window.updateBadgeDisplay(currentScore, true);
+                    alert(`🎉 通報成功！\n\n資料已寫入 Firebase (代碼: ${docRef.id})\n通報身分：${uName}\n🎁 獲得 50 點環保積分！`);
+                } else {
+                    // 如果沒登入 (匿名通報)，不給積分
+                    alert(`🎉 匿名通報成功！\n\n資料已寫入 Firebase (代碼: ${docRef.id})\n\n💡 提示：若使用 Google 登入通報，即可累積環保積分與專屬稱號喔！`);
+                }
+                
+                event.target.reset();
             } catch (e) {
-                console.error("❌ 寫入資料庫失敗: ", e);
-                alert("❌ 發生錯誤，通報失敗！\n錯誤訊息：" + e.message);
+                console.error("寫入資料庫失敗: ", e);
+                alert("❌ 發生錯誤，通報失敗！\n" + e.message);
             } finally {
-                // 不論成功或失敗，最後都把按鈕恢復原狀
                 submitBtn.disabled = false;
                 submitBtn.innerText = "🚀 送出通報寫入資料庫";
             }
