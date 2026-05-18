@@ -137,9 +137,13 @@
 
         <div class="report-panel" id="river-report">
             <h3 id="table-title">數據中心</h3>
+            
             <div class="toolbar">
-                <div class="filter-group">
-                    <input type="text" id="searchInput" data-i18n="searchPlaceholder" placeholder="🔍 搜尋名稱或縣市..." oninput="filterTable()">
+                <div class="filter-group" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <input type="text" id="searchInput" data-i18n="searchPlaceholder" placeholder="🔍 搜尋名稱或縣市..." onkeypress="if(event.keyCode===13) filterTable()">
+                    <button onclick="filterTable()" style="background:var(--deep-blue); color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer; font-weight:bold; white-space: nowrap;" data-i18n="searchBtn">
+                        🔍 搜尋
+                    </button>
                     <select id="levelFilter" onchange="filterTable()">
                         <option value="all" data-i18n="filterAll">顯示所有等級</option>
                         <option value="danger" data-i18n="filterDanger">🔴 重度污染 / 狀態不佳</option>
@@ -149,6 +153,7 @@
                 </div>
                 <button class="export-btn" onclick="exportToCSV()" data-i18n="exportBtn">📥 匯出 CSV 報表</button>
             </div>
+            
             <table class="report-table">
                 <thead id="table-head"></thead>
                 <tbody id="river-report-body"></tbody>
@@ -227,7 +232,7 @@
                 mapTitleRiver: "全國河川污染監測圖", mapTitleRes: "全國水庫水質監測圖", mapLegendRiver: "河川污染等級", mapLegendRes: "水庫水質等級",
                 legDangerRiver: "重度污染 (BOD>5 mg/L)", legWarningRiver: "中度污染 (BOD 3-5 mg/L)", legSafeRiver: "正常河川 (BOD<3 mg/L)",
                 legDangerRes: "水質不佳 (TOC高/濁度高)", legWarningRes: "水質待觀察 (pH異常)", legSafeRes: "水質良好 (TOC低/pH穩定)",
-                dataCenterRiver: "全部河川監測清單", dataCenterRes: "全部水庫水質清單", searchPlaceholder: "🔍 搜尋名稱或縣市...",
+                dataCenterRiver: "全部河川監測清單", dataCenterRes: "全部水庫水質清單", searchPlaceholder: "🔍 搜尋名稱或縣市...", searchBtn: "🔍 搜尋",
                 filterAll: "顯示所有等級", filterDanger: "🔴 重度污染 / 狀態不佳", filterWarning: "🟡 中度污染 / 待觀察", filterSafe: "🟢 正常安全 / 狀態良好", exportBtn: "📥 匯出 CSV 報表",
                 thRiver: "河川名稱", thLevel: "污染等級", thBod: "BOD 數值 (mg/L)", thStation: "測站 / 縣市", thTrend: "歷史趨勢",
                 thResName: "水庫名稱", thResStatus: "水質狀態", thPh: "平均 pH", thToc: "平均 TOC (mg/L)", thDetail: "詳細狀態",
@@ -247,7 +252,7 @@
                 mapTitleRiver: "National River Pollution Map", mapTitleRes: "National Reservoir Quality Map", mapLegendRiver: "River Pollution Levels", mapLegendRes: "Reservoir Quality Levels",
                 legDangerRiver: "Severe (BOD>5 mg/L)", legWarningRiver: "Moderate (BOD 3-5 mg/L)", legSafeRiver: "Normal (BOD<3 mg/L)",
                 legDangerRes: "Poor (High TOC/Turbidity)", legWarningRes: "Monitor (Abnormal pH)", legSafeRes: "Good (Low TOC/Stable pH)",
-                dataCenterRiver: "River Data Center", dataCenterRes: "Reservoir Data Center", searchPlaceholder: "🔍 Search name or city...",
+                dataCenterRiver: "River Data Center", dataCenterRes: "Reservoir Data Center", searchPlaceholder: "🔍 Search name or city...", searchBtn: "🔍 Search",
                 filterAll: "All Levels", filterDanger: "🔴 Severe / Poor", filterWarning: "🟡 Moderate / Monitor", filterSafe: "🟢 Normal / Good", exportBtn: "📥 Export CSV",
                 thRiver: "River Name", thLevel: "Level", thBod: "BOD Value (mg/L)", thStation: "Station / City", thTrend: "Trend",
                 thResName: "Reservoir Name", thResStatus: "Status", thPh: "Avg pH", thToc: "Avg TOC (mg/L)", thDetail: "Details",
