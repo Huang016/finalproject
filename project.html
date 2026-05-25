@@ -710,113 +710,35 @@
             }
         };
     </script>
-
 <script>
-(function() {
+// ==========================================
+    // 5. 替換為真正的 AI (Gemini API 串接)
+    // ==========================================
+    const GEMINI_API_KEY = 'AIzaSyAFaV8xjDQYWvt8ADqStkW6TXWY7eNsvMA'; 
     
-    const style = document.createElement('style');
-    style.innerHTML = `
-        #my-chatbot-btn { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; border-radius: 50%; background: var(--deep-blue, #002244); color: white; border: 2px solid white; cursor: pointer; font-size: 28px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 9999; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
-        #my-chatbot-btn:hover { background: var(--coral-orange, #FF7F50); transform: scale(1.1); }
-        #my-chatbot-window { display: none; position: fixed; bottom: 90px; right: 20px; width: 340px; height: 480px; background: white; border: 1px solid #ddd; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 9999; flex-direction: column; overflow: hidden; font-family: "微軟正黑體", sans-serif; }
-        #my-chatbot-header { background: var(--deep-blue, #002244); color: white; padding: 15px; font-weight: bold; text-align: center; font-size: 16px; margin: 0; display: flex; justify-content: space-between; align-items: center;}
-        #my-chatbot-close { cursor: pointer; font-size: 20px; font-weight: bold; }
-        #my-chatbot-messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background: #f4f7f6; margin: 0; }
-        #my-chatbot-input-area { display: flex; border-top: 1px solid #ddd; background: white; padding: 10px; gap: 8px; margin: 0; }
-        #my-chatbot-input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 20px; outline: none; font-size: 14px; }
-        #my-chatbot-input:focus { border-color: var(--coral-orange, #FF7F50); }
-        #my-chatbot-send { padding: 8px 18px; background: var(--coral-orange, #FF7F50); color: white; border: none; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.3s; }
-        #my-chatbot-send:hover { background: #ff6329; }
-        .msg-bot { background: white; color: #333; padding: 12px 16px; border-radius: 15px 15px 15px 0; align-self: flex-start; max-width: 80%; font-size: 14px; line-height: 1.5; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .msg-user { background: var(--deep-blue, #002244); color: white; padding: 12px 16px; border-radius: 15px 15px 0 15px; align-self: flex-end; max-width: 80%; font-size: 14px; line-height: 1.5; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    // 設定 AI 的「系統提示詞 (System Prompt)」，讓它知道自己的身分
+    const systemPrompt = `
+        你現在是「湛藍守護：台灣水資源監測平台」的專屬 AI 客服導覽員。
+        請用友善、專業、簡短的語氣回答使用者的問題。
+        以下是關於本網站的資訊：
+        1. 網站目的：結合政府開放資料與民眾力量，即時監控全國河川與水庫水質。
+        2. 地圖顏色：綠色(正常)、黃色(中度污染)、紅色(重度污染)。
+        3. 積分系統：登入並通報污染可獲50積分，稱號從「見習巡守員」升級至「湛藍守護大使」。
+        4. 通報功能：網頁下方有全民通報網，可上傳照片與地點。
+        5. 即時數據：點擊地圖旁的「數據中心」可查看或匯出各縣市水質CSV報表。
+        請根據以上資訊，自然地回答使用者的問題。如果使用者閒聊，也請友善回應。
     `;
-    document.head.appendChild(style);
 
-    
-    const chatBtn = document.createElement('button');
-    chatBtn.id = 'my-chatbot-btn';
-    chatBtn.innerHTML = '💧';
-    document.body.appendChild(chatBtn);
-
-   
-    const chatWindow = document.createElement('div');
-    chatWindow.id = 'my-chatbot-window';
-    chatWindow.innerHTML = `
-        <div id="my-chatbot-header">
-            <span>🌊 湛藍守護導覽員</span>
-            <span id="my-chatbot-close">×</span>
-        </div>
-        <div id="my-chatbot-messages">
-            <div class="msg-bot">您好！我是湛藍守護平台的專屬導覽員 🤖<br><br>您可以問我：<br>👉 這是什麼網站？<br>👉 如何獲得積分與稱號？<br>👉 地圖上的顏色代表什麼？<br>👉 如何通報污染？</div>
-        </div>
-        <div id="my-chatbot-input-area">
-            <input type="text" id="my-chatbot-input" placeholder="請輸入您的問題...">
-            <button id="my-chatbot-send">發送</button>
-        </div>
-    `;
-    document.body.appendChild(chatWindow);
-
-   
-    chatBtn.addEventListener('click', () => {
-        chatWindow.style.display = 'flex';
-        chatBtn.style.display = 'none';
-        document.getElementById('my-chatbot-input').focus();
-    });
-    
-    document.getElementById('my-chatbot-close').addEventListener('click', () => {
-        chatWindow.style.display = 'none';
-        chatBtn.style.display = 'flex';
-    });
-
-   
-    const knowledgeBase = [
-        { keywords: ["什麼", "網站", "介紹", "目的"], answer: "「湛藍守護」是一個台灣水資源與污染監測平台。我們結合了政府開放資料與民眾力量，即時監控全國河川與水庫水質，共同守護環境！" },
-        { keywords: ["地圖", "顏色", "紅", "綠", "黃"], answer: "地圖上的圓點代表水質觀測站。🟢 綠色代表水質良好/正常；🟡 黃色代表中度污染/待觀察；🔴 紅色則代表重度污染/狀態不佳喔！" },
-        { keywords: ["積分", "點數", "稱號", "升級"], answer: "只要您使用 Google 登入並成功送出「水域異常通報」，每次可獲得 50 點環保積分！累積積分可以從「見習巡守員」一路升級到最高的「湛藍守護大使」喔 🏆" },
-        { keywords: ["通報", "檢舉", "發現", "垃圾", "死魚"], answer: "如果您在河川或水庫發現異常（如不明廢水、大量垃圾、死魚等），請滑到網頁下方的「全民通報網」，輸入地點、類型並附上照片，就能將資料寫入我們的資料庫！" },
-        { keywords: ["資料來源", "準確", "政府", "更新"], answer: "我們的水質數據來自「政府資料開放平台」的 API，並且每 30 秒就會自動更新一次，確保您看到的是最新的即時監測數據 📡" },
-        { keywords: ["英文", "語言", "english"], answer: "我們平台支援雙語切換！只要點擊網頁右上角的「🌐 English」按鈕，就可以輕鬆切換成全英文介面囉。" },
-        { keywords: ["定位", "附近", "警示"], answer: "您可以點擊地圖右下角的「📍 智慧定位與警示」按鈕，系統會自動抓取您的 GPS 位置，並告訴您距離最近的河川或水庫的水質狀況喔！" },
-        { keywords: ["匯出", "下載", "csv", "報表"], answer: "在中間的「數據中心」區塊，您可以點擊綠色的「📥 匯出 CSV 報表」按鈕，將目前表格內的水質數據下載到您的電腦中進行分析。" },
-        { keywords: ["你好", "哈囉", "嗨"], answer: "哈囉！歡迎來到湛藍守護平台。對我們網站的即時地圖、全民通報系統或是積分機制有任何疑問，都可以隨時問我喔！" }
-    ];
-
-    function findAnswer(userText) {
-        const lowerText = userText.toLowerCase();
-
-        
-        if ((lowerText.includes("最嚴重") || lowerText.includes("最髒") || lowerText.includes("污染最")) && lowerText.includes("河川")) {
-        
-            if (typeof globalReportData !== 'undefined' && globalReportData.length > 0) {
-                
-                let rivers = globalReportData.filter(item => !item.isReservoir);
-                let worstRiver = rivers.sort((a, b) => b.bod - a.bod)[0];
-                
-                if (worstRiver) {
-                    return `根據我們的衛星即時連線數據，目前污染最嚴重的河川是位於 **${worstRiver.county}** 的 **「${worstRiver.name}」** (測站：${worstRiver.station})。<br><br>它的 BOD 數值高達 **${worstRiver.bod.toFixed(2)} mg/L**，屬於 🔴重度污染 等級，需要大家密切關注！`;
-                }
-            }
-            return "目前還在與環保署的衛星資料庫同步中，請稍等幾秒鐘後再問我一次喔 📡";
-        }
-
-       
-        for (let item of knowledgeBase) {
-            if (item.keywords.some(keyword => lowerText.includes(keyword))) {
-                return item.answer;
-            }
-        }
-        return "這個問題超出我的守護範圍了 😅 您可以試著問我關於「即時地圖」、「通報機制」、「積分稱號」或是「目前哪條河川污染最嚴重」的問題喔！";
-    }
-    
+    // 6. 聊天室發送訊息的邏輯 (升級為非同步 async)
     const sendBtn = document.getElementById('my-chatbot-send');
     const inputField = document.getElementById('my-chatbot-input');
     const messages = document.getElementById('my-chatbot-messages');
 
-    function sendMessage() {
+    async function sendMessage() {
         const text = inputField.value.trim();
         if (!text) return;
 
-       
+        
         const userMsg = document.createElement('div');
         userMsg.className = 'msg-user';
         userMsg.innerText = text;
@@ -825,15 +747,44 @@
         inputField.value = '';
         messages.scrollTop = messages.scrollHeight;
 
-      
-        setTimeout(() => {
-            const botResponse = findAnswer(text);
-            const botMsg = document.createElement('div');
-            botMsg.className = 'msg-bot';
-            botMsg.innerHTML = botResponse; 
-            messages.appendChild(botMsg);
-            messages.scrollTop = messages.scrollHeight;
-        }, 800);
+        
+        const botMsg = document.createElement('div');
+        botMsg.className = 'msg-bot';
+        botMsg.innerText = '思考中... 🌊';
+        messages.appendChild(botMsg);
+        messages.scrollTop = messages.scrollHeight;
+
+        
+        try {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [{
+                            text: systemPrompt + "\n\n使用者問：" + text
+                        }]
+                    }]
+                })
+            });
+
+            const data = await response.json();
+            
+            
+            if (data.candidates && data.candidates.length > 0) {
+                
+                let aiText = data.candidates[0].content.parts[0].text;
+                aiText = aiText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+                botMsg.innerHTML = aiText;
+            } else {
+                botMsg.innerText = "抱歉，我的 AI 腦袋剛剛短路了，請再試一次！";
+            }
+        } catch (error) {
+            console.error("API 呼叫失敗:", error);
+            botMsg.innerText = "網路連線異常，無法聯繫 AI 伺服器 🥲";
+        }
+        
+        messages.scrollTop = messages.scrollHeight;
     }
 
     
@@ -841,7 +792,6 @@
     inputField.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') sendMessage();
     });
-})();
-</script>
+    </script>
 </body>
 </html>
