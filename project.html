@@ -783,15 +783,30 @@
 
     function findAnswer(userText) {
         const lowerText = userText.toLowerCase();
+
+        
+        if ((lowerText.includes("最嚴重") || lowerText.includes("最髒") || lowerText.includes("污染最")) && lowerText.includes("河川")) {
+        
+            if (typeof globalReportData !== 'undefined' && globalReportData.length > 0) {
+                
+                let rivers = globalReportData.filter(item => !item.isReservoir);
+                let worstRiver = rivers.sort((a, b) => b.bod - a.bod)[0];
+                
+                if (worstRiver) {
+                    return `根據我們的衛星即時連線數據，目前污染最嚴重的河川是位於 **${worstRiver.county}** 的 **「${worstRiver.name}」** (測站：${worstRiver.station})。<br><br>它的 BOD 數值高達 **${worstRiver.bod.toFixed(2)} mg/L**，屬於 🔴重度污染 等級，需要大家密切關注！`;
+                }
+            }
+            return "目前還在與環保署的衛星資料庫同步中，請稍等幾秒鐘後再問我一次喔 📡";
+        }
+
+       
         for (let item of knowledgeBase) {
-            
             if (item.keywords.some(keyword => lowerText.includes(keyword))) {
                 return item.answer;
             }
         }
-        return "這個問題超出我的守護範圍了 😅 您可以試著問我關於「即時地圖」、「通報機制」、「積分稱號」或是「資料來源」的問題喔！";
+        return "這個問題超出我的守護範圍了 😅 您可以試著問我關於「即時地圖」、「通報機制」、「積分稱號」或是「目前哪條河川污染最嚴重」的問題喔！";
     }
-
     
     const sendBtn = document.getElementById('my-chatbot-send');
     const inputField = document.getElementById('my-chatbot-input');
