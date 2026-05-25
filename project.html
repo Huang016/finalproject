@@ -710,5 +710,88 @@
             }
         };
     </script>
+    <script>
+(function() {
+    // 1. 動態寫入 CSS 樣式 (不會影響你原本網頁的設計)
+    const style = document.createElement('style');
+    style.innerHTML = `
+        #my-chatbot-btn { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; border-radius: 50%; background: #007bff; color: white; border: none; cursor: pointer; font-size: 28px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); z-index: 9999; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
+        #my-chatbot-btn:hover { background: #0056b3; transform: scale(1.05); }
+        #my-chatbot-window { display: none; position: fixed; bottom: 90px; right: 20px; width: 320px; height: 450px; background: white; border: 1px solid #ddd; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 9999; flex-direction: column; overflow: hidden; font-family: sans-serif; }
+        #my-chatbot-header { background: #007bff; color: white; padding: 15px; font-weight: bold; text-align: center; font-size: 16px; margin: 0; }
+        #my-chatbot-messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background: #f9f9f9; margin: 0; }
+        #my-chatbot-input-area { display: flex; border-top: 1px solid #ddd; background: white; padding: 10px; gap: 8px; margin: 0; }
+        #my-chatbot-input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 20px; outline: none; font-size: 14px; }
+        #my-chatbot-send { padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 14px; }
+        #my-chatbot-send:hover { background: #0056b3; }
+        .msg-bot { background: #e9ecef; color: #333; padding: 10px 14px; border-radius: 15px 15px 15px 0; align-self: flex-start; max-width: 80%; font-size: 14px; line-height: 1.4; word-wrap: break-word; }
+        .msg-user { background: #007bff; color: white; padding: 10px 14px; border-radius: 15px 15px 0 15px; align-self: flex-end; max-width: 80%; font-size: 14px; line-height: 1.4; word-wrap: break-word; }
+    `;
+    document.head.appendChild(style);
+
+    // 2. 建立右下角的圓形聊天按鈕
+    const chatBtn = document.createElement('button');
+    chatBtn.id = 'my-chatbot-btn';
+    chatBtn.innerHTML = '💬';
+    document.body.appendChild(chatBtn);
+
+    // 3. 建立對話視窗介面
+    const chatWindow = document.createElement('div');
+    chatWindow.id = 'my-chatbot-window';
+    chatWindow.innerHTML = `
+        <div id="my-chatbot-header">線上客服小幫手</div>
+        <div id="my-chatbot-messages">
+            <div class="msg-bot">您好！這是一個測試機器人，請問有什麼我可以協助您的嗎？</div>
+        </div>
+        <div id="my-chatbot-input-area">
+            <input type="text" id="my-chatbot-input" placeholder="請輸入訊息...">
+            <button id="my-chatbot-send">發送</button>
+        </div>
+    `;
+    document.body.appendChild(chatWindow);
+
+    // 4. 設定按鈕點擊事件 (打開/關閉視窗)
+    chatBtn.addEventListener('click', () => {
+        const isClosed = chatWindow.style.display === 'none' || chatWindow.style.display === '';
+        chatWindow.style.display = isClosed ? 'flex' : 'none';
+        if (isClosed) document.getElementById('my-chatbot-input').focus();
+    });
+
+    // 5. 設定發送訊息的邏輯
+    const sendBtn = document.getElementById('my-chatbot-send');
+    const inputField = document.getElementById('my-chatbot-input');
+    const messages = document.getElementById('my-chatbot-messages');
+
+    function sendMessage() {
+        const text = inputField.value.trim();
+        if (!text) return; // 如果輸入空白則不處理
+
+        // 把使用者輸入的文字放到畫面上
+        const userMsg = document.createElement('div');
+        userMsg.className = 'msg-user';
+        userMsg.innerText = text;
+        messages.appendChild(userMsg);
+        
+        // 清空輸入框，並將捲軸滾到最下面
+        inputField.value = '';
+        messages.scrollTop = messages.scrollHeight;
+
+        // 模擬機器人思考 1 秒後自動回覆
+        setTimeout(() => {
+            const botMsg = document.createElement('div');
+            botMsg.className = 'msg-bot';
+            botMsg.innerText = '收到您的訊息：「' + text + '」。目前這只是前端展示用的範例，尚無連接後端真人客服喔！';
+            messages.appendChild(botMsg);
+            messages.scrollTop = messages.scrollHeight;
+        }, 1000);
+    }
+
+    // 綁定「發送按鈕點擊」與「鍵盤 Enter 鍵」事件
+    sendBtn.addEventListener('click', sendMessage);
+    inputField.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendMessage();
+    });
+})();
+</script>
 </body>
 </html>
