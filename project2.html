@@ -725,8 +725,19 @@
         // 3. 綁定 Google 登入功能到全域
         window.loginWithGoogle = async function() {
             const provider = new GoogleAuthProvider();
-            try { await signInWithPopup(auth, provider); } 
-            catch (error) { alert("登入失敗：" + error.message); }
+            try {
+                await signInWithPopup(auth, provider);
+            } catch (error) {
+                console.error("Firebase 登入失敗:", error);
+                const code = error && error.code ? error.code : "unknown";
+                const hints = {
+                    "auth/unauthorized-domain": "目前網址沒有加入 Firebase Authentication 的 Authorized domains。",
+                    "auth/popup-blocked": "瀏覽器封鎖了 Google 登入彈出視窗，請允許此網站彈出視窗。",
+                    "auth/popup-closed-by-user": "Google 登入視窗被關閉，請重新點擊登入。",
+                    "auth/operation-not-allowed": "Firebase Console 尚未啟用 Google 登入提供者。"
+                };
+                alert(`登入失敗：${hints[code] || error.message}\n\n錯誤代碼：${code}`);
+            }
         };
 
         window.logout = function() { signOut(auth); };
