@@ -32,7 +32,27 @@ http://127.0.0.1:3000
 
 請不要直接雙擊 HTML，也不要用 Live Server 開啟，因為 Gemini API 現在是透過 `server.py` 後端呼叫。
 
-## 4. 推上 GitHub 前
+## 4. 部署到 Render
+
+1. 先把專案推到 GitHub。
+2. 到 Render 建立 New Web Service，連接這個 GitHub repo。
+3. Render 會讀取 `render.yaml`，使用：
+
+```text
+Build Command: pip install -r requirements.txt
+Start Command: gunicorn server:app
+```
+
+4. 在 Render 的 Environment Variables 新增：
+
+```text
+GEMINI_API_KEY=你的 Gemini API Key
+GEMINI_MODEL=gemini-flash-lite-latest
+```
+
+5. 部署完成後，直接開 Render 給你的網址即可使用網站與 Gemini 聊天功能。
+
+## 5. 推上 GitHub 前
 
 ```powershell
 git init

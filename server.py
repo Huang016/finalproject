@@ -101,4 +101,5 @@ def chat():
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", "3000"))
-    app.run(host="127.0.0.1", port=port, debug=True)
+    debug = os.getenv("FLASK_DEBUG", "").lower() in {"1", "true", "yes"}
+    app.run(host="0.0.0.0", port=port, debug=debug)
