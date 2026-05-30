@@ -84,6 +84,9 @@ def files(filename):
         return "Not found", 404
     return send_from_directory(BASE_DIR, filename)
 
+@app.route("/")
+def home():
+    return "Render is working. API endpoint is /api/chat"
 
 @app.route("/api/chat", methods=["POST"])
 def chat():
