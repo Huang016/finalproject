@@ -73,7 +73,7 @@ def call_gemini(user_message: str) -> str:
 
 @app.route("/")
 def index():
-    return send_from_directory(BASE_DIR, "project2.html")
+    return send_from_directory(BASE_DIR, "finalproject.html")
 
 
 @app.route("/<path:filename>")
@@ -83,10 +83,6 @@ def files(filename):
     if filename == ".env" or filename.endswith(".env"):
         return "Not found", 404
     return send_from_directory(BASE_DIR, filename)
-
-@app.route("/")
-def home():
-    return "Render is working. API endpoint is /api/chat"
 
 @app.route("/api/chat", methods=["POST"])
 def chat():
