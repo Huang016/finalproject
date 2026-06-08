@@ -692,7 +692,6 @@
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
-        // 1. Firebase 初始化
         const firebaseConfig = {
             apiKey: "AIzaSyCc42kGPkac8oM4u8JJoszFmu3AeSqcVjY",
             authDomain: "finalproject-50228.firebaseapp.com",
@@ -706,7 +705,6 @@
         const db = getFirestore(app);
         let currentUser = null;
 
-        // 2. 監聽登入狀態
         onAuthStateChanged(auth, (user) => {
             currentUser = user;
             const loginBtn = document.getElementById('login-btn');
@@ -722,7 +720,6 @@
             }
         });
 
-        // 3. 綁定 Google 登入功能到全域
         window.loginWithGoogle = async function() {
             const provider = new GoogleAuthProvider();
             try {
@@ -742,7 +739,6 @@
 
         window.logout = function() { signOut(auth); };
 
-        // 4. Base64 轉換與 GPS 定位綁定
         function getBase64(file) {
            return new Promise((resolve, reject) => {
              const reader = new FileReader(); reader.readAsDataURL(file);
@@ -761,12 +757,9 @@
             }
         };
 
-        // 5. 提交表單寫入 Firestore
-        // 5. 提交表單寫入 Firestore (終極防護版)
         window.submitReport = async function(event) {
             event.preventDefault(); // 防止網頁重新整理
             
-            // 抓取送出按鈕，並鎖定防連點
             const submitBtn = event.target.querySelector('button[type="submit"]');
             submitBtn.disabled = true;
             submitBtn.innerText = "⏳ 傳送中，請稍候...";
@@ -799,7 +792,6 @@
 
                 console.log("3. 準備寫入 Firebase...", { loc, type, uid });
 
-                // 寫入資料庫
                 const docRef = await addDoc(collection(db, "reports"), {
                     location: loc, 
                     type: type, 
@@ -812,19 +804,17 @@
 
                 console.log("4. 寫入成功！文件 ID: ", docRef.id);
 
-                // 更新畫面分數
                 let currentScore = parseInt(localStorage.getItem('ecoPoints') || '0') + 50;
                 localStorage.setItem('ecoPoints', currentScore);
                 document.getElementById('score-val').innerText = currentScore;
 
                 alert(`🎉 通報成功！\n\n資料已確實寫入 Firebase！\n(資料庫代碼: ${docRef.id})\n🎁 獲得 50 點環保積分！`);
-                event.target.reset(); // 清空表單
+                event.target.reset(); 
 
             } catch (e) {
                 console.error("❌ 寫入資料庫失敗: ", e);
                 alert("❌ 發生錯誤，通報失敗！\n錯誤訊息：" + e.message);
             } finally {
-                // 不論成功或失敗，最後都把按鈕恢復原狀
                 submitBtn.disabled = false;
                 submitBtn.innerText = "🚀 送出通報寫入資料庫";
             }
@@ -832,7 +822,7 @@
     </script>
     <script>
     (function() {
-        // 1. 動態寫入 CSS 樣式
+
         const style = document.createElement('style');
         style.innerHTML = `
             #my-chatbot-btn { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; border-radius: 50%; background: var(--deep-blue, #002244); color: white; border: 2px solid white; cursor: pointer; font-size: 28px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 9999; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
@@ -851,7 +841,6 @@
         `;
         document.head.appendChild(style);
 
-        // 2. 建立聊天按鈕與介面
         const chatBtn = document.createElement('button');
         chatBtn.id = 'my-chatbot-btn';
         chatBtn.innerHTML = '💧';
@@ -874,7 +863,6 @@
         `;
         document.body.appendChild(chatWindow);
 
-        // 3. 設定視窗開關
         chatBtn.addEventListener('click', () => {
             chatWindow.style.display = 'flex';
             chatBtn.style.display = 'none';
@@ -967,7 +955,7 @@
         inputField.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') sendMessage();
         });
-    })(); // 補上缺少的結尾括號！
+    })(); 
     </script>
 </body>
 </html>
